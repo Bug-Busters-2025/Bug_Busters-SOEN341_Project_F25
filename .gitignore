@@ -1,0 +1,122 @@
+# =========================================================
+# General Reference
+# See https://help.github.com/articles/ignoring-files/
+# =========================================================
+
+# ----------------------
+# Dependencies
+# ----------------------
+node_modules/
+jspm_packages/
+bower_components/
+web_modules/
+
+# Yarn v3
+.pnp
+.pnp.js
+.pnp.*
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/sdks
+!.yarn/versions
+
+# ----------------------
+# Testing / Coverage
+# ----------------------
+coverage/
+*.lcov
+.nyc_output
+jest-html-reporters-*.html
+jest-*.json
+
+# ----------------------
+# Production / Build
+# ----------------------
+build/
+dist/
+.cache/
+.parcel-cache
+.next/
+out/
+.nuxt/
+.output/
+.vuepress/dist
+.temp
+.svelte-kit/
+**/.vitepress/dist
+**/.vitepress/cache
+.docusaurus
+
+# CRA specific
+/frontend/build
+/frontend/coverage
+
+# ----------------------
+# Logs
+# ----------------------
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+
+# ----------------------
+# Diagnostic Reports
+# ----------------------
+report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
+
+# ----------------------
+# Runtime Data
+# ----------------------
+pids
+*.pid
+*.seed
+*.pid.lock
+
+# ----------------------
+# Compiled Binary Addons
+# ----------------------
+build/Release
+
+# ----------------------
+# Cache
+# ----------------------
+.eslintcache
+.stylelintcache
+.node_repl_history
+.npm
+.fusebox/
+.dynamodb/
+.firebase/
+.tern-port
+.vscode-test
+.vite/
+
+# ----------------------
+# Env Files
+# ----------------------
+.env
+.env.*
+!.env.example
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# ----------------------
+# Editors / OS
+# ----------------------
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# ----------------------
+# Misc
+# ----------------------
+*.tsbuildinfo
+*.tgz
+.yarn-integrity
