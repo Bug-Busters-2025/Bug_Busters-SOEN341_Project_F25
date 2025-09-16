@@ -49,7 +49,7 @@ Inspired by platforms like [CampusGroups](https://www.campusgroups.com), the sys
 | Name             | Student Number | GitHub Username      |
 |------------------|----------------|----------------------|
 | Spencer Toupin   | 40259693       | @spennyt             |
-|    |    |    |
+|Jeremy de Passorio| 40271747       |  @JeremDePass        |
 
 
 ---
