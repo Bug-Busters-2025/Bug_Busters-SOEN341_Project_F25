@@ -48,13 +48,14 @@ Inspired by platforms like [CampusGroups](https://www.campusgroups.com), the sys
 
 | Name                | Student Number | GitHub Username  |
 |---------------------|----------------|------------------|
-| Spencer Toupin      | 40259693       | spenyt           |
+| Spencer Toupin      | 40259693       | SpenyT           |
 | Jeremy de Passorio  | 40271747       | JeremDePass      |
 | Mattia Vergnat      | 40276164       | martin0024       |
 | Conrad Tcheuffa     | 40269674       | Conradtch07      |
 | Nigel Kyle Arintoc  | 40281248       | Nigelkyle21      |
 | Muhammad Haris      | 40232227       | Harryjee7        |
-
+| Zein Rammal         | 40282083       | ZeinRam          |
+| Liam Handfield      | 40300383       | Doula            |
 
 ---
 
