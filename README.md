@@ -49,7 +49,7 @@ Inspired by platforms like [CampusGroups](https://www.campusgroups.com), the sys
 | Name                | Student Number | GitHub Username  |
 |---------------------|----------------|------------------|
 | Spencer Toupin      | 40259693       | spenyt           |
-|Jeremy de Passorio   | 40271747       |  @JeremDePass    |
+| Jeremy de Passorio  | 40271747       | JeremDePass      |
 | Mattia Vergnat      | 40276164       | martin0024       |
 | Conrad Tcheuffa     | 40269674       | Conradtch07      |
 | Nigel Kyle Arintoc  | 40281248       | Nigelkyle21      |
