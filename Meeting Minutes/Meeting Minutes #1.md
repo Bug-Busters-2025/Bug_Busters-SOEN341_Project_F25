@@ -50,9 +50,10 @@
 ### 5. Action Items
 | Task | Responsible | Deadline |
 |------|-------------|----------|
-| Create GitHub repository | Sept 16, 2025 |
-| Draft README with project description + team info | Sept 17, 2025 |
-| Define user stories in GitHub Issues | Whole Team | Sept 18, 2025 |
+| Create GitHub repository | Whole Team | Sept 18, 2025 |
+| Draft README with project description + team info | Whole Team | Sept 18, 2025 |
+| Define user stories in GitHub Issues | Spencer | Sept 18, 2025 |
 | Break down tasks and assign | Whole Team | Sept 18, 2025 |
-| Meeting Minutes # 1 | Sept 18, 2025 |
+| Meeting Minutes # 1 | Haris | Sept 18, 2025 |
+
 
