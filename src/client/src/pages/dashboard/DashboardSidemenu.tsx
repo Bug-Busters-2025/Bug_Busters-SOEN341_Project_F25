@@ -1,4 +1,4 @@
-import { NavLink } from "react-router";
+import {NavLink} from "react-router"
 
 export default function DashboardSidemenu() {
   
@@ -8,7 +8,7 @@ export default function DashboardSidemenu() {
           topbar
         </div>
         <nav className="flex flex-1 justify-left items-center truncate p-2">
-          dashboard tab navbar
+          <NavLink className="hover:underline truncate" to=".">Overview</NavLink>
         </nav>
         <div className="truncate">
           bottombar
