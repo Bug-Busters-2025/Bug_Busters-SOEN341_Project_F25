@@ -2,12 +2,14 @@ import { createBrowserRouter } from "react-router";
 
 import RootLayout from "./RootLayout";
 
+import Home from "../pages/Home";
+
 const router = createBrowserRouter([
     {
         path: "/",
         Component: RootLayout,
         children: [
-            { index: true, Component: null }, // set to null for now, but should be replaced by the Home page component
+            { index: true, Component: Home }, // set to null for now, but should be replaced by the Home page component
             {
                 path: "dashboard",
                 Component: null, // set to null for now, but should be replaced by the Dashboard page component
