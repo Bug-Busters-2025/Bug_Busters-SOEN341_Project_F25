@@ -1,6 +1,7 @@
 const express = require('express');
 const app = express();
 const exportRouter = require('./routes/export');
+const eventsRouter = require('./routes/events');
 const db = require('./config/db');
 
 
@@ -21,4 +22,5 @@ app.get("/api", (req,res)=> {
 
 })
 app.use('/api/events', exportRouter);
+app.use('/api/events', eventsRouter);
 app.listen(5001,()=> {console.log("server started on port 5001")})

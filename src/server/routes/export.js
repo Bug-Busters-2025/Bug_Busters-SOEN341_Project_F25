@@ -13,12 +13,12 @@ router.get('/:id/export', async (req, res) => {
   try {
     // Query attendee info for this event
     const [rows] = await db.query(
-      `SELECT s.name        AS student_name,
-              s.email       AS email,
+      `SELECT u.name        AS student_name,
+              u.email       AS email,
               t.status      AS ticket_status,
               t.checked_in  AS checked_in
        FROM tickets t
-       JOIN students s ON t.student_id = s.id
+       JOIN users u ON t.user_id = u.id
        WHERE t.event_id = ?`,
       [eventId]
     );
