@@ -4,6 +4,8 @@ const db = require('../config/db');
 
 const router = express.Router();
 
+// This export route provides a CSV with the required attendee columns:
+// student name, email address, ticket claim status, and check-in status. (#25)
 
 router.get('/:id/export', async (req, res) => {
   const eventId = req.params.id;
@@ -36,5 +38,7 @@ router.get('/:id/export', async (req, res) => {
     res.status(500).json({ message: 'Failed to export attendee list' });
   }
 });
+
+//Implemented CSV export for Task #24 
 
 module.exports = router;
