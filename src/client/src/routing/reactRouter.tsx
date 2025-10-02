@@ -7,6 +7,7 @@ import Search from "../pages/Search";
 import ErrorBoundary from "../pages/ErrorBoundary";
 import DashboardLayout from "../pages/dashboard/DashboardLayout";
 import Overview from "../pages/dashboard/sections/Overview";
+import OrganizerDashboard from "../pages/dashboard/OrganizerDashboard";
 
 const router = createBrowserRouter([
    {
@@ -24,7 +25,8 @@ const router = createBrowserRouter([
             id: "dashboard",
             path: "dashboard",
             Component: DashboardLayout,
-            children: [{ index: true, Component: Overview }],
+            children: [{ index: true, Component: Overview }, 
+                       { id: "organizer", path: "organizer", Component: OrganizerDashboard }],
          },
          { id: "search", path: "search", Component: Search },
          { id: "not-found", path: "*", Component: NotFound },
