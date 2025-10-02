@@ -35,12 +35,16 @@ export default function Navbar() {
 
             <div className="flex items-center gap-3">
                <div className="hidden sm:inline-flex items-center justify-center gap-2">
+               <Link to="/login">
                   <Button variant="outline" size="md">
                      Login
                   </Button>
+               </Link>
+               <Link to="/signup">
                   <Button variant="primary" size="md">
                      Sign Up
                   </Button>
+               </Link>
                </div>
                <div>
                   <ThemeToggle />
