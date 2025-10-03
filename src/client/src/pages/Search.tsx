@@ -2,7 +2,6 @@ import { useState, useMemo } from "react";
 import {
    Card,
    CardContent,
-   CardDescription,
    CardHeader,
    CardTitle,
 } from "@/components/ui/card";
@@ -16,19 +15,16 @@ import {
 import { Input } from "@/components/ui/input";
 import { mockEvents, categories, organizations } from "@/data/events";
 import { DatePicker } from "@/components/DatePicker";
+import EventCard from "@/components/ui/EventCard";
 import {
    Calendar,
-   MapPin,
-   Users,
-   Clock,
    Search as SearchIcon,
    Filter,
 } from "lucide-react";
 
 export default function Search() {
    const [selectedCategory, setSelectedCategory] = useState<string>("All");
-   const [selectedOrganization, setSelectedOrganization] =
-      useState<string>("All");
+   const [selectedOrganization, setSelectedOrganization] = useState<string>("All");
    const [selectedDate, setSelectedDate] = useState<string>("");
    const [searchQuery, setSearchQuery] = useState<string>("");
 
@@ -62,16 +58,6 @@ export default function Search() {
          return true;
       });
    }, [selectedDate, selectedCategory, selectedOrganization, searchQuery]);
-
-   const formatDate = (dateString: string) => {
-      const date = new Date(dateString);
-      return date.toLocaleDateString("en-US", {
-         weekday: "long",
-         year: "numeric",
-         month: "long",
-         day: "numeric",
-      });
-   };
 
    const clearFilters = () => {
       setSelectedCategory("All");
@@ -208,77 +194,14 @@ export default function Search() {
             {filteredEvents.length > 0 ? (
                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                   {filteredEvents.map((event, index) => (
-                     <Card
+                     <EventCard 
                         key={event.id}
-                        className="group hover:shadow-xl transition-all duration-300 cursor-pointer border-border/50 hover:border-border bg-card/50 backdrop-blur-sm overflow-hidden animate-in fade-in-0 slide-in-from-bottom-4"
-                        style={{ animationDelay: `${index * 50}ms` }}
-                     >
-                        <div className="relative h-48 overflow-hidden">
-                           <img
-                              src={event.imageUrl}
-                              alt={event.title}
-                              className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
-                           />
-                           <div className="absolute inset-0 bg-gradient-to-t from-background/80 via-transparent to-transparent" />
-                           <div className="absolute top-3 right-3">
-                              <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-primary/90 text-primary-foreground backdrop-blur-sm">
-                                 {event.category}
-                              </span>
-                           </div>
-                           <div className="absolute bottom-3 left-3 right-3">
-                              <CardTitle className="text-lg text-foreground drop-shadow-md">
-                                 {event.title}
-                              </CardTitle>
-                           </div>
-                        </div>
-
-                        <CardContent className="p-4 flex flex-col h-full">
-                           <CardDescription className="text-sm mb-2 flex-1">
-                              {event.description.length > 150
-                                 ? `${event.description.substring(0, 150)}...`
-                                 : event.description}
-                           </CardDescription>
-
-                           <div className="space-y-2 mb-4">
-                              <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                                 <Calendar className="h-4 w-4 flex-shrink-0" />
-                                 <span className="truncate">
-                                    {formatDate(event.date)}
-                                 </span>
-                              </div>
-                              <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                                 <Clock className="h-4 w-4 flex-shrink-0" />
-                                 <span>{event.time}</span>
-                              </div>
-                              <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                                 <MapPin className="h-4 w-4 flex-shrink-0" />
-                                 <span className="truncate">
-                                    {event.location}
-                                 </span>
-                              </div>
-                              <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                                 <Users className="h-4 w-4 flex-shrink-0" />
-                                 <span>
-                                    {event.currentAttendees}/
-                                    {event.maxAttendees} attendees
-                                 </span>
-                              </div>
-                           </div>
-
-                           <div className="mb-4 pt-2 border-t border-border/50">
-                              <p className="text-sm font-medium text-foreground">
-                                 Organized by:{" "}
-                                 <span className="text-primary">
-                                    {event.organization}
-                                 </span>
-                              </p>
-                           </div>
-
-                           <button className="w-full bg-primary text-primary-foreground py-2.5 px-4 rounded-md hover:bg-primary/90 transition-all duration-200 active:scale-[0.98] font-medium cursor-pointer">
-                              Register Now
-                           </button>
-                        </CardContent>
-                     </Card>
+                        event={event}
+                        index={index}>
+                        <button className="w-full bg-primary text-primary-foreground py-2.5 px-4 rounded-md hover:bg-primary/90 transition-all duration-200 active:scale-[0.98] font-medium cursor-pointer">
+                           Register Now
+                        </button>
+                     </EventCard>
                   ))}
                </div>
             ) : (
