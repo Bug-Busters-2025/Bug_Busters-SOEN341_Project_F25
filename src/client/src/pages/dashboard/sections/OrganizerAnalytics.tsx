@@ -1,0 +1,221 @@
+import 
+{
+    ClipboardList,
+    Calendar, 
+    Users, 
+    TrendingUp, 
+    DollarSign 
+} 
+from "../../../../node_modules/lucide-react";
+import AnalyticsCard from "@/components/dashboard/organizer/AnalyticsCard";
+import AnalyticsSection from "@/components/dashboard/organizer/AnalyticsSection";
+import EventOverviewCard from "@/components/ui/EventOverviewCard";
+import { type Event } from "@/data/events";
+
+export const mockEvents: Event[] = [
+   {
+      id: "1",
+      title: "Tech Conference 2025",
+      description:
+         "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
+      date: "2025-10-15",
+      time: "09:00",
+      location: "Convention Center, Montreal",
+      category: "Technology",
+      organization: "Tech Society",
+      imageUrl:
+         "https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=400&h=200&fit=crop",
+      maxAttendees: 500,
+      currentAttendees: 234,
+   },
+   {
+      id: "2",
+      title: "Music Festival",
+      description:
+         "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
+      date: "2025-10-20",
+      time: "18:00",
+      location: "Parc Jean-Drapeau, Montreal",
+      category: "Music",
+      organization: "Music Club",
+      imageUrl:
+         "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=400&h=200&fit=crop",
+      maxAttendees: 2000,
+      currentAttendees: 1500,
+   },
+   {
+      id: "3",
+      title: "Study Group - Calculus",
+      description:
+         "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
+      date: "2025-10-12",
+      time: "14:00",
+      location: "Library Room 301",
+      category: "Academic",
+      organization: "Math Society",
+      imageUrl:
+         "https://images.unsplash.com/photo-1434030216411-0b793f4b4173?w=400&h=200&fit=crop",
+      maxAttendees: 20,
+      currentAttendees: 12,
+   },
+   {
+      id: "4",
+      title: "Basketball Tournament",
+      description:
+         "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
+      date: "2025-10-18",
+      time: "10:00",
+      location: "Gymnasium",
+      category: "Sports",
+      organization: "Athletics Department",
+      imageUrl:
+         "https://images.unsplash.com/photo-1546519638-68e109498ffc?w=400&h=200&fit=crop",
+      maxAttendees: 64,
+      currentAttendees: 45,
+   },
+   {
+      id: "5",
+      title: "Art Exhibition Opening",
+      description:
+         "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
+      date: "2025-10-14",
+      time: "17:00",
+      location: "Art Gallery",
+      category: "Arts",
+      organization: "Fine Arts Club",
+      imageUrl:
+         "https://images.unsplash.com/photo-1541961017774-22349e4a1262?w=400&h=200&fit=crop",
+      maxAttendees: 100,
+      currentAttendees: 67,
+   },
+   {
+      id: "6",
+      title: "Career Fair",
+      description:
+         "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
+      date: "2025-10-25",
+      time: "10:00",
+      location: "Student Center",
+      category: "Career",
+      organization: "Career Services",
+      imageUrl:
+         "https://images.unsplash.com/photo-1586281380349-632531db7ed4?w=400&h=200&fit=crop",
+      maxAttendees: 300,
+      currentAttendees: 180,
+   },
+   {
+      id: "7",
+      title: "Environmental Workshop",
+      description:
+         "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
+      date: "2025-10-16",
+      time: "13:00",
+      location: "Environmental Science Building",
+      category: "Environment",
+      organization: "Green Club",
+      imageUrl:
+         "https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?w=400&h=200&fit=crop",
+      maxAttendees: 50,
+      currentAttendees: 23,
+   },
+   {
+      id: "8",
+      title: "Dance Workshop",
+      description:
+         "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
+      date: "2025-10-22",
+      time: "19:00",
+      location: "Dance Studio",
+      category: "Arts",
+      organization: "Dance Society",
+      imageUrl:
+         "https://images.unsplash.com/photo-1508700929628-666bc8bd84ea?w=400&h=200&fit=crop",
+      maxAttendees: 30,
+      currentAttendees: 18,
+   },
+];
+
+export default function OrganizerAnalytics () {
+    return (
+        <div 
+            id="dsh-org-analytics" 
+            className="h-full w-full flex flex-col p-6 md:p-10 gap-10">
+            <div className="flex flex-col justify-left">
+                <h1 className="text-3xl font-bold tracking-tigh">My Analytics</h1>
+                <p className="text-muted-foreground">Track performance and insights for your events</p>
+            </div>
+            <div className="w-full flex flex-row justify-between pd-6">
+                <AnalyticsCard 
+                    title="Total Events"
+                    icon={<ClipboardList/>}
+                    analytic="53">
+                    <span className="text-green-500">+12%</span> from last month
+                </AnalyticsCard>
+                <AnalyticsCard 
+                    title="Avg Attendees/Event"
+                    icon={<Users/>}
+                    analytic="150">
+                    <span className="text-red-500">-1%</span> from last month
+                </AnalyticsCard>
+                <AnalyticsCard 
+                    title="Total Attendees"
+                    icon={<TrendingUp/>}
+                    analytic="7950">
+                    <span className="text-green-500">+21%</span> from last month
+                </AnalyticsCard>
+                <AnalyticsCard 
+                    title="Total Revenue"
+                    icon={<DollarSign/>}
+                    analytic="$1000">
+                    <span className="text-green-500">+2%</span> from last month
+                </AnalyticsCard>
+            </div>
+            <hr className="border-t-3 border"/>
+            <AnalyticsSection
+                title="Upcoming Events"
+                subtitle="Your scheduled events for the next 30 days"
+                sectionId="upcoming-events"
+                icon={<Calendar/>}>
+                <div className="flex flex-row ">
+                    <div className="space-y-4 border rounded-md p-6 overflow-y-scroll">
+                        {mockEvents.map((event) => (
+                            <EventOverviewCard 
+                                key={event.id}
+                                event={event}/>
+                        ))}
+                    </div>
+                    <div className="">
+                        hello
+                    </div>
+                </div>
+            </AnalyticsSection>
+            <AnalyticsSection
+                title="My Events"
+                subtitle="Manage your events"
+                sectionId="my-events"
+                icon={<ClipboardList/>}>
+                    <div className="">
+                        
+                    </div>
+            </AnalyticsSection>
+            <AnalyticsSection
+                title="My Statistics"
+                subtitle="View your trends"
+                sectionId="my-stats"
+                icon={<TrendingUp/>}>
+                    <div className="">
+                        
+                    </div>
+            </AnalyticsSection>
+            <AnalyticsSection
+                title="My Cash Flow"
+                subtitle="View your cash flow"
+                sectionId="my-accounting"
+                icon={<DollarSign/>}>
+                    <div className="">
+                        
+                    </div>
+            </AnalyticsSection>
+        </div>
+    )
+}
