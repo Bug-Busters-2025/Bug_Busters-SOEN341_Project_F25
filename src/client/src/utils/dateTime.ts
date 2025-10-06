@@ -8,4 +8,9 @@ const formatDate = (dateString: string) => {
     });
 };
 
-export { formatDate };
+const getDayOfWeek = (dateString: string) => {
+    const date = new Date(dateString)
+    return date.toLocaleDateString("en-US", { weekday: "short" })
+}
+
+export { formatDate, getDayOfWeek };
