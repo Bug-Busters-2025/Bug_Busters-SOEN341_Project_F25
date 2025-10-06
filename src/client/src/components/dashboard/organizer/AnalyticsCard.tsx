@@ -11,7 +11,7 @@ interface AnalyticsCardProps {
 function AnalyticsCard ({title, icon, analytic, action, children} : AnalyticsCardProps) {
     return (
         <div
-            className="flex flex-col border shadow-md rounded-md p-6 w-[250px]
+            className="flex flex-col border shadow-md rounded-md p-6 w-1/6 m-w-[250px]
                         transition-all duration-300 
                         hover:scale-105 hover:shadow-xl 
                         active:scale-100 active:shadow-sm"
