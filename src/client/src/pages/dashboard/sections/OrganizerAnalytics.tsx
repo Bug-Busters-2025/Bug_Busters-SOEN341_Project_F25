@@ -10,6 +10,7 @@ from "../../../../node_modules/lucide-react";
 import AnalyticsCard from "@/components/dashboard/organizer/AnalyticsCard";
 import AnalyticsSection from "@/components/dashboard/organizer/AnalyticsSection";
 import EventOverviewCard from "@/components/ui/EventOverviewCard";
+import CalendarUi from "@/components/CalendarUi";
 import { type Event } from "@/data/events";
 
 export const mockEvents: Event[] = [
@@ -144,7 +145,7 @@ export default function OrganizerAnalytics () {
                 <h1 className="text-3xl font-bold tracking-tigh">My Analytics</h1>
                 <p className="text-muted-foreground">Track performance and insights for your events</p>
             </div>
-            <div className="w-full flex flex-row justify-between pd-6">
+            <div className="w-full flex flex-row justify-around pd-6">
                 <AnalyticsCard 
                     title="Total Events"
                     icon={<ClipboardList/>}
@@ -176,16 +177,19 @@ export default function OrganizerAnalytics () {
                 subtitle="Your scheduled events for the next 30 days"
                 sectionId="upcoming-events"
                 icon={<Calendar/>}>
-                <div className="flex flex-row ">
-                    <div className="space-y-4 border rounded-md p-6 overflow-y-scroll">
-                        {mockEvents.map((event) => (
+                <div className="flex flex-row w-full">
+                    <div className="space-y-4 border rounded-md p-6 overflow-y-scroll overflow-x-none w-1/2">
+                        {mockEvents.length !== 0 ? mockEvents.map((event) => (
                             <EventOverviewCard 
                                 key={event.id}
                                 event={event}/>
-                        ))}
+                        )) : 
+                        (
+                            <p>you have no events in your timeline</p>
+                        )}
                     </div>
-                    <div className="">
-                        hello
+                    <div className="w-1/2">
+                        <CalendarUi events={mockEvents}/>
                     </div>
                 </div>
             </AnalyticsSection>
