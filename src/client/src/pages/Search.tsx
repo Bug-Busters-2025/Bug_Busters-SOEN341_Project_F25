@@ -14,7 +14,7 @@ import {
    SelectValue,
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
-import { mockEvents, categories, organizations } from "@/data/events";
+import { mockEvents, categories, organizations, mockSavedEvents, type Event } from "@/data/events";
 import { DatePicker } from "@/components/DatePicker";
 import {
    Calendar,
@@ -23,7 +23,34 @@ import {
    Clock,
    Search as SearchIcon,
    Filter,
+   Bookmark,
+   BookmarkCheck,
 } from "lucide-react";
+
+// Mock functions to manage saved events
+const getSavedEvents = () => {
+   return mockSavedEvents;
+};
+
+const saveEvent = async (event: Event): Promise<boolean> => {
+   const savedEvents = getSavedEvents();
+   const isAlreadySaved = savedEvents.some(savedEvent => savedEvent.id === event.id);
+   
+   if (!isAlreadySaved) {
+      mockSavedEvents.push(event);
+      return true;
+   }
+   return false;
+};
+
+const unsaveEvent = async (eventId: string): Promise<boolean> => {
+   const index = mockSavedEvents.findIndex(event => event.id === eventId);
+   if (index > -1) {
+      mockSavedEvents.splice(index, 1);
+      return true;
+   }
+   return false;
+};
 
 export default function Search() {
    const [selectedCategory, setSelectedCategory] = useState<string>("All");
@@ -31,6 +58,7 @@ export default function Search() {
       useState<string>("All");
    const [selectedDate, setSelectedDate] = useState<string>("");
    const [searchQuery, setSearchQuery] = useState<string>("");
+   const [savedEvents, setSavedEvents] = useState<Event[]>(getSavedEvents());
 
    const filteredEvents = useMemo(() => {
       return mockEvents.filter((event) => {
@@ -80,7 +108,30 @@ export default function Search() {
       setSearchQuery("");
    };
 
+const handleSaveEvent = async (event: Event) => {
+      
+      try {
+         const isCurrentlySaved = savedEvents.some(savedEvent => savedEvent.id === event.id);
+         
+         if (isCurrentlySaved) {
+            await unsaveEvent(event.id);
+            setSavedEvents(prev => prev.filter(savedEvent => savedEvent.id !== event.id));
+         } else {
+            await saveEvent(event);
+            setSavedEvents(prev => [...prev, event]);
+         }
+      } catch (error) {
+         console.error('Error saving event:', error);
+      }
+   };
+
+   const isEventSaved = (eventId: string) => {
+      return savedEvents.some(event => event.id === eventId);
+   };
+
    return (
+            
+
       <div className="min-h-screen bg-background p-6">
          <div className="max-w-7xl mx-auto">
             <div className="mb-8 animate-in fade-in-0 slide-in-from-top-4 duration-700">
@@ -92,6 +143,7 @@ export default function Search() {
                   community
                </p>
             </div>
+
 
             <Card className="mb-8 animate-in fade-in-0 slide-in-from-bottom-4 duration-400">
                <CardHeader>
@@ -207,12 +259,16 @@ export default function Search() {
 
             {filteredEvents.length > 0 ? (
                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {filteredEvents.map((event, index) => (
+                  {filteredEvents.map((event, index) => {
+                     const isSaved = isEventSaved(event.id);
+                     return(
                      <Card
                         key={event.id}
                         className="group hover:shadow-xl transition-all duration-300 cursor-pointer border-border/50 hover:border-border bg-card/50 backdrop-blur-sm overflow-hidden animate-in fade-in-0 slide-in-from-bottom-4"
                         style={{ animationDelay: `${index * 50}ms` }}
                      >
+
+
                         <div className="relative h-48 overflow-hidden">
                            <img
                               src={event.imageUrl}
@@ -220,6 +276,26 @@ export default function Search() {
                               className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
                            />
                            <div className="absolute inset-0 bg-gradient-to-t from-background/80 via-transparent to-transparent" />
+                           
+                           <button
+
+                              onClick={(e) => {
+                                 e.stopPropagation();
+                                 handleSaveEvent(event);
+                              }}
+                              className={`absolute top-3 left-3 z-10 p-2 rounded-full backdrop-blur-sm transition-all cursor-pointer ${
+                                 isSaved 
+                                    ? 'bg-primary text-primary-foreground hover:bg-primary/90' 
+                                    : 'bg-background/80 text-muted-foreground hover:bg-background hover:text-foreground'
+                              } `}
+                           >
+                              {isSaved ? (
+                                 <BookmarkCheck className="h-4 w-4" />
+                              ) : (
+                                 <Bookmark className="h-4 w-4" />
+                              )}
+                           </button>
+                           
                            <div className="absolute top-3 right-3">
                               <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-primary/90 text-primary-foreground backdrop-blur-sm">
                                  {event.category}
@@ -279,7 +355,7 @@ export default function Search() {
                            </button>
                         </CardContent>
                      </Card>
-                  ))}
+               )})}
                </div>
             ) : (
                <Card>
