@@ -8,6 +8,7 @@ import ErrorBoundary from "../pages/ErrorBoundary";
 import DashboardLayout from "../pages/dashboard/DashboardLayout";
 import Overview from "../pages/dashboard/sections/Overview";
 import OrganizerAnalytics from "../pages/dashboard/sections/OrganizerAnalytics";
+import OrganizerEvents from "../pages/dashboard/sections/OrganizerEvents";
 
 const router = createBrowserRouter([
    {
@@ -28,6 +29,7 @@ const router = createBrowserRouter([
             children: [
                { index: true, Component: Overview },
                { path: "analytics", Component: OrganizerAnalytics },
+               { path: "OrganizerEvents", Component: OrganizerEvents },
             ],
          },
          { id: "search", path: "search", Component: Search },

@@ -4,6 +4,7 @@ import {
    CardContent,
    CardHeader,
    CardTitle,
+   CardDescription,
 } from "@/components/ui/card";
 import {
    Select,
@@ -272,7 +273,7 @@ export default function Search() {
                               Register Now
                            </button>
                         </CardContent>
-                     </Card>
+                     </EventCard>
                   ))}
                </div>
             ) : (
