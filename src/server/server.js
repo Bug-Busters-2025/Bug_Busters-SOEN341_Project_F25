@@ -1,7 +1,13 @@
-import express from 'express';
-import db from './db.js';
-
+const express = require('express');
 const app = express();
+const db = require('./db.js');
+const dotenv = require('dotenv');
+const cors = require('cors');
+
+dotenv.config();
+
+app.use(express.json());
+app.use(cors());
 
 app.get('/users', (req, res) => {
   db.query('SELECT * FROM users', (err, results) => {
@@ -14,4 +20,15 @@ app.get('/users', (req, res) => {
   });
 });
 
-app.listen(3000, () => console.log('Server running on port 3000'));
+app.get('/events', (req, res) => {
+  db.query('SELECT * FROM events', (err, results) => {
+    if (err){
+      console.error(err);
+      res.status(500).send('Database error');
+      return;
+    }
+    res.status(200).json(results);
+  })
+})
+
+app.listen(process.env.PORT, () => console.log(`Server running on port ${process.env.PORT}`));

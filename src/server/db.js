@@ -1,10 +1,14 @@
-import mysql from 'mysql2';
+const mysql = require('mysql2');
+const dotenv = require('dotenv');
+
+dotenv.config();
 
 const connection = mysql.createConnection({
-  host: 'localhost',
-  user: 'root',
-  password: '',     
-  database: 'BugBusterDB'
+  host: process.env.DB_HOST,
+  user: process.env.DB_USER,
+  password: process.env.DB_PASSWORD,
+  port: process.env.DB_PORT,
+  database: process.env.DB_NAME
 });
 
 connection.connect((err) => {
@@ -15,4 +19,4 @@ connection.connect((err) => {
   console.log('Connected to mySQL database');
 });
 
-export default connection;
+module.exports = connection;

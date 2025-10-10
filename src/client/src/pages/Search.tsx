@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import {
    Card,
    CardContent,
@@ -14,16 +14,16 @@ import {
    SelectValue,
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
-import { mockEvents, categories, organizations } from "@/data/events";
+import { categories, organizations, type Event} from "@/data/events";
 import { DatePicker } from "@/components/DatePicker";
 import {
    Calendar,
    MapPin,
    Users,
-   Clock,
    Search as SearchIcon,
    Filter,
 } from "lucide-react";
+import axios from "axios";
 
 export default function Search() {
    const [selectedCategory, setSelectedCategory] = useState<string>("All");
@@ -31,22 +31,27 @@ export default function Search() {
       useState<string>("All");
    const [selectedDate, setSelectedDate] = useState<string>("");
    const [searchQuery, setSearchQuery] = useState<string>("");
+   const [events, setEvents] = useState<Event[]>([]);
+
+   useEffect(() => {
+      const fetchData = async  () => {
+         try {
+            const response = await axios.get("http://localhost:3000/events");
+            console.log("Events fetched:", response.data);
+            if(response.data) {
+               setEvents(response.data);
+            }
+         } catch (error) {
+            console.error("Error fetching events:", error);
+         }
+      };
+
+      fetchData();
+   }, []);
 
    const filteredEvents = useMemo(() => {
-      return mockEvents.filter((event) => {
-         if (selectedDate && event.date !== selectedDate) {
-            return false;
-         }
-         if (
-            selectedCategory !== "All" &&
-            event.category !== selectedCategory
-         ) {
-            return false;
-         }
-         if (
-            selectedOrganization !== "All" &&
-            event.organization !== selectedOrganization
-         ) {
+      return events.filter((event) => {
+         if (selectedDate && event.event_date !== selectedDate) {
             return false;
          }
 
@@ -61,7 +66,7 @@ export default function Search() {
 
          return true;
       });
-   }, [selectedDate, selectedCategory, selectedOrganization, searchQuery]);
+   }, [events, selectedDate, selectedCategory, selectedOrganization, searchQuery]);
 
    const formatDate = (dateString: string) => {
       const date = new Date(dateString);
@@ -220,11 +225,6 @@ export default function Search() {
                               className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
                            />
                            <div className="absolute inset-0 bg-gradient-to-t from-background/80 via-transparent to-transparent" />
-                           <div className="absolute top-3 right-3">
-                              <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-primary/90 text-primary-foreground backdrop-blur-sm">
-                                 {event.category}
-                              </span>
-                           </div>
                            <div className="absolute bottom-3 left-3 right-3">
                               <CardTitle className="text-lg text-foreground drop-shadow-md">
                                  {event.title}
@@ -243,12 +243,8 @@ export default function Search() {
                               <div className="flex items-center gap-2 text-sm text-muted-foreground">
                                  <Calendar className="h-4 w-4 flex-shrink-0" />
                                  <span className="truncate">
-                                    {formatDate(event.date)}
+                                    {formatDate(event.event_date)}
                                  </span>
-                              </div>
-                              <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                                 <Clock className="h-4 w-4 flex-shrink-0" />
-                                 <span>{event.time}</span>
                               </div>
                               <div className="flex items-center gap-2 text-sm text-muted-foreground">
                                  <MapPin className="h-4 w-4 flex-shrink-0" />
@@ -259,8 +255,7 @@ export default function Search() {
                               <div className="flex items-center gap-2 text-sm text-muted-foreground">
                                  <Users className="h-4 w-4 flex-shrink-0" />
                                  <span>
-                                    {event.currentAttendees}/
-                                    {event.maxAttendees} attendees
+                                    {event.ticket_capacity} tickets  
                                  </span>
                               </div>
                            </div>
@@ -269,7 +264,7 @@ export default function Search() {
                               <p className="text-sm font-medium text-foreground">
                                  Organized by:{" "}
                                  <span className="text-primary">
-                                    {event.organization}
+                                    {event.organizer}
                                  </span>
                               </p>
                            </div>
