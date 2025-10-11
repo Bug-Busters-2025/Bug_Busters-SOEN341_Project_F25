@@ -35,7 +35,7 @@ export default function Navbar() {
                   to="/calendar"
                   className="text-sm font-medium text-foreground/60 transition-colors hover:text-foreground"
                >
-                  calendar
+                  Events Calendar
                </Link>
             </div>
 
