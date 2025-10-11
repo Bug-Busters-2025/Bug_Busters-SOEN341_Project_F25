@@ -41,6 +41,33 @@ app.get("/events", (req, res) => {
       res.status(200).json(results);
    });
 });
+app.get("/events/:organizer_id", (req, res) => {
+
+   const organizer_id = req.params;
+   if (!organizer_id) {
+      res.status(400).send("Organizer ID is required");
+      return;
+   }
+
+   const sql = `SELECT events.*, users.name AS organizer_name, users.email AS organizer_email
+   FROM events
+   JOIN users ON events.organizer_id = users.id
+   WHERE events.organizer_id = ?
+   ORDER by event_date ASC`;
+
+   db.query(sql, [organizer_id], (err, results) => {  
+      if (err) {
+         console.error(err);
+         res.status(500).send("Database error");
+         return;
+      }
+      if (results.length === 0) {
+         res.status(404).send("No events found for this organizer");
+         return;
+      }
+      res.status(200).json(results);
+   });
+});
 
 // get event by id
 app.get("/event/:event_id", (req, res) => {
@@ -68,9 +95,9 @@ app.get("/event/:event_id", (req, res) => {
    });
 });
 
-// create event
+// create event // change to const later
 app.post("/event", (req, res) => {
-   const {
+   let {
       organizer_id,
       title,
       description,
@@ -79,9 +106,16 @@ app.post("/event", (req, res) => {
       event_date,
       location,
       ticket_capacity,
-      remaining_tickets,
+      remaining_tickets = ticket_capacity,
       ticket_type,
    } = req.body;
+
+
+   // Temporary until authentication is added
+   organizer_id = organizer_id || 1;
+
+   // Default remaining_tickets = ticket_capacity
+  
 
    if (
       !organizer_id ||
