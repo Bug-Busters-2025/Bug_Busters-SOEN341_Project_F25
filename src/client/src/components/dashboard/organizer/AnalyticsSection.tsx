@@ -1,7 +1,7 @@
 import { memo, type ReactNode } from "react"
 
 interface AnalyticsSectionProps {
-    title: string,
+    title: ReactNode,
     subtitle: string,
     sectionId?: string,
     icon: ReactNode,

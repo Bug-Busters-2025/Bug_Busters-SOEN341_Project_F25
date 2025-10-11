@@ -1,7 +1,7 @@
 import { memo, type ReactNode } from "react"
 
 interface AnalyticsCardProps {
-    title: string,
+    title: String,
     icon: ReactNode,
     analytic: string,
     action?: (id: string) => void,

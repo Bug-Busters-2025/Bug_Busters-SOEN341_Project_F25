@@ -1,30 +1,45 @@
 import { useState } from "react";
 import axios from "axios";
-import {
-  Card,
-  CardHeader,
-  CardTitle,
-  CardContent,
-  CardDescription,
-} from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
+import { Plus , ClipboardList} from "lucide-react";
+import AnalyticsSection from "@/components/dashboard/organizer/AnalyticsSection";
 import { Button } from "@/components/ui/button";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Calendar } from "lucide-react";
+
+
 
 
 export default function CreateEvent() {
+
+    const [Open, setOpen] = useState(false);
+
 return (
+    <AnalyticsSection
+        title=
+        {
+          <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2">
+              <ClipboardList className="h-5 w-5 text-primary" />
+              <span>My Events</span>
+            </div>
 
- <Card className="max-w-3xl mx-auto border border-border/50 bg-card/50 backdrop-blur-sm animate-in fade-in-0 slide-in-from-bottom-4">
+          <Button
+            variant="primary"
+            size="icon"
+            className=" h-8 w-8 rounded-full bg-primary text-primary-foreground hover:bg-primary/90"
+            onClick={() => setOpen(true)}
+          >
+            <Plus className="!h-4 !w-4" />
+          </Button>
+        </div>
 
- </Card>
+
+        }
+            
+        subtitle="Manage your events"
+        sectionId="my-events"
+        icon={<ClipboardList/>}>
+          {<div></div>}
+    </AnalyticsSection>
+ 
 
 
 
