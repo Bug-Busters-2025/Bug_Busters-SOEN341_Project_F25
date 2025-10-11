@@ -4,6 +4,7 @@ import RootLayout from "./RootLayout";
 import Home from "../pages/Home";
 import NotFound from "../pages/NotFound";
 import Search from "../pages/Search";
+import Calendar from "../pages/Calendar";
 import ErrorBoundary from "../pages/ErrorBoundary";
 import DashboardLayout from "../pages/dashboard/DashboardLayout";
 import Overview from "../pages/dashboard/sections/Overview";
@@ -34,6 +35,7 @@ const router = createBrowserRouter([
          },
          { id: "search", path: "search", Component: Search },
          { id: "not-found", path: "*", Component: NotFound },
+         { id: "calendar", path: "calendar", Component: Calendar},
       ],
    },
 ]);

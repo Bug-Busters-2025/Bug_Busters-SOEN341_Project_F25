@@ -14,7 +14,13 @@ import {
    SelectValue,
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
-import { categories, organizations, type Event} from "@/data/events";
+import {
+   categories,
+   organizations,
+   mockSavedEvents,
+   type Event,
+   type Event,
+} from "@/data/events";
 import { DatePicker } from "@/components/DatePicker";
 import EventCard from "@/components/ui/EventCard";
 import {
@@ -23,8 +29,36 @@ import {
    Users,
    Search as SearchIcon,
    Filter,
+   Bookmark,
+   BookmarkCheck,
 } from "lucide-react";
-import axios from "axios";
+
+// Mock functions to manage saved events
+const getSavedEvents = () => {
+   return mockSavedEvents;
+};
+
+const saveEvent = async (event: Event): Promise<boolean> => {
+   const savedEvents = getSavedEvents();
+   const isAlreadySaved = savedEvents.some(
+      (savedEvent) => savedEvent.id === event.id
+   );
+
+   if (!isAlreadySaved) {
+      mockSavedEvents.push(event);
+      return true;
+   }
+   return false;
+};
+
+const unsaveEvent = async (eventId: string): Promise<boolean> => {
+   const index = mockSavedEvents.findIndex((event) => event.id === eventId);
+   if (index > -1) {
+      mockSavedEvents.splice(index, 1);
+      return true;
+   }
+   return false;
+};
 
 export default function Search() {
    const [selectedCategory, setSelectedCategory] = useState<string>("All");
@@ -34,11 +68,11 @@ export default function Search() {
    const [events, setEvents] = useState<Event[]>([]);
 
    useEffect(() => {
-      const fetchData = async  () => {
+      const fetchData = async () => {
          try {
             const response = await axios.get("http://localhost:3000/events");
             console.log("Events fetched:", response.data);
-            if(response.data) {
+            if (response.data) {
                setEvents(response.data);
             }
          } catch (error) {
@@ -66,7 +100,13 @@ export default function Search() {
 
          return true;
       });
-   }, [events, selectedDate, selectedCategory, selectedOrganization, searchQuery]);
+   }, [
+      events,
+      selectedDate,
+      selectedCategory,
+      selectedOrganization,
+      searchQuery,
+   ]);
 
    const formatDate = (dateString: string) => {
       const date = new Date(dateString);
@@ -83,6 +123,30 @@ export default function Search() {
       setSelectedOrganization("All");
       setSelectedDate("");
       setSearchQuery("");
+   };
+
+   const handleSaveEvent = async (event: Event) => {
+      try {
+         const isCurrentlySaved = savedEvents.some(
+            (savedEvent) => savedEvent.id === event.id
+         );
+
+         if (isCurrentlySaved) {
+            await unsaveEvent(event.id);
+            setSavedEvents((prev) =>
+               prev.filter((savedEvent) => savedEvent.id !== event.id)
+            );
+         } else {
+            await saveEvent(event);
+            setSavedEvents((prev) => [...prev, event]);
+         }
+      } catch (error) {
+         console.error("Error saving event:", error);
+      }
+   };
+
+   const isEventSaved = (eventId: string) => {
+      return savedEvents.some((event) => event.id === eventId);
    };
 
    return (
@@ -212,69 +276,97 @@ export default function Search() {
 
             {filteredEvents.length > 0 ? (
                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {filteredEvents.map((event, index) => (
-                     <EventCard 
-                        key={event.id}
-                        className="group hover:shadow-xl transition-all duration-300 cursor-pointer border-border/50 hover:border-border bg-card/50 backdrop-blur-sm overflow-hidden animate-in fade-in-0 slide-in-from-bottom-4"
-                        style={{ animationDelay: `${index * 50}ms` }}
-                     >
-                        <div className="relative h-48 overflow-hidden">
-                           <img
-                              src={event.imageUrl}
-                              alt={event.title}
-                              className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
-                           />
-                           <div className="absolute inset-0 bg-gradient-to-t from-background/80 via-transparent to-transparent" />
-                           <div className="absolute bottom-3 left-3 right-3">
-                              <CardTitle className="text-lg text-foreground drop-shadow-md">
-                                 {event.title}
-                              </CardTitle>
-                           </div>
-                        </div>
+                  {filteredEvents.map((event, index) => {
+                     const isSaved = isEventSaved(event.id);
+                     return (
+                        <Card
+                           key={event.id}
+                           className="group hover:shadow-xl transition-all duration-300 cursor-pointer border-border/50 hover:border-border bg-card/50 backdrop-blur-sm overflow-hidden animate-in fade-in-0 slide-in-from-bottom-4"
+                           style={{ animationDelay: `${index * 50}ms` }}
+                        >
+                           <div className="relative h-48 overflow-hidden">
+                              <img
+                                 src={event.imageUrl}
+                                 alt={event.title}
+                                 className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                              />
+                              <div className="absolute inset-0 bg-gradient-to-t from-background/80 via-transparent to-transparent" />
 
-                        <CardContent className="p-4 flex flex-col h-full">
-                           <CardDescription className="text-sm mb-2 flex-1">
-                              {event.description.length > 150
-                                 ? `${event.description.substring(0, 150)}...`
-                                 : event.description}
-                           </CardDescription>
+                              <button
+                                 onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleSaveEvent(event);
+                                 }}
+                                 className={`absolute top-3 left-3 z-10 p-2 rounded-full backdrop-blur-sm transition-all cursor-pointer ${
+                                    isSaved
+                                       ? "bg-primary text-primary-foreground hover:bg-primary/90"
+                                       : "bg-background/80 text-muted-foreground hover:bg-background hover:text-foreground"
+                                 } `}
+                              >
+                                 {isSaved ? (
+                                    <BookmarkCheck className="h-4 w-4" />
+                                 ) : (
+                                    <Bookmark className="h-4 w-4" />
+                                 )}
+                              </button>
 
-                           <div className="space-y-2 mb-4">
-                              <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                                 <Calendar className="h-4 w-4 flex-shrink-0" />
-                                 <span className="truncate">
-                                    {formatDate(event.event_date)}
+                              <div className="absolute top-3 right-3">
+                                 <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-primary/90 text-primary-foreground backdrop-blur-sm">
+                                    {event.category}
                                  </span>
                               </div>
-                              <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                                 <MapPin className="h-4 w-4 flex-shrink-0" />
-                                 <span className="truncate">
-                                    {event.location}
-                                 </span>
-                              </div>
-                              <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                                 <Users className="h-4 w-4 flex-shrink-0" />
-                                 <span>
-                                    {event.ticket_capacity} tickets  
-                                 </span>
+                              <div className="absolute bottom-3 left-3 right-3">
+                                 <CardTitle className="text-lg text-foreground drop-shadow-md">
+                                    {event.title}
+                                 </CardTitle>
                               </div>
                            </div>
 
-                           <div className="mb-4 pt-2 border-t border-border/50">
-                              <p className="text-sm font-medium text-foreground">
-                                 Organized by:{" "}
-                                 <span className="text-primary">
-                                    {event.organizer}
-                                 </span>
-                              </p>
-                           </div>
+                           <CardContent className="p-4 flex flex-col h-full">
+                              <CardDescription className="text-sm mb-2 flex-1">
+                                 {event.description.length > 150
+                                    ? `${event.description.substring(
+                                         0,
+                                         150
+                                      )}...`
+                                    : event.description}
+                              </CardDescription>
 
-                           <button className="w-full bg-primary text-primary-foreground py-2.5 px-4 rounded-md hover:bg-primary/90 transition-all duration-200 active:scale-[0.98] font-medium cursor-pointer">
-                              Register Now
-                           </button>
-                        </CardContent>
-                     </EventCard>
-                  ))}
+                              <div className="space-y-2 mb-4">
+                                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                                    <Calendar className="h-4 w-4 flex-shrink-0" />
+                                    <span className="truncate">
+                                       {formatDate(event.event_date)}
+                                    </span>
+                                 </div>
+                                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                                    <MapPin className="h-4 w-4 flex-shrink-0" />
+                                    <span className="truncate">
+                                       {event.location}
+                                    </span>
+                                 </div>
+                                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                                    <Users className="h-4 w-4 flex-shrink-0" />
+                                    <span>{event.ticket_capacity} tickets</span>
+                                 </div>
+                              </div>
+
+                              <div className="mb-4 pt-2 border-t border-border/50">
+                                 <p className="text-sm font-medium text-foreground">
+                                    Organized by:{" "}
+                                    <span className="text-primary">
+                                       {event.organizer}
+                                    </span>
+                                 </p>
+                              </div>
+
+                              <button className="w-full bg-primary text-primary-foreground py-2.5 px-4 rounded-md hover:bg-primary/90 transition-all duration-200 active:scale-[0.98] font-medium cursor-pointer">
+                                 Register Now
+                              </button>
+                           </CardContent>
+                        </Card>
+                     );
+                  })}
                </div>
             ) : (
                <Card>
