@@ -31,6 +31,12 @@ export default function Navbar() {
                >
                   Dashboard
                </Link>
+               <Link
+                  to="/calendar"
+                  className="text-sm font-medium text-foreground/60 transition-colors hover:text-foreground"
+               >
+                  calendar
+               </Link>
             </div>
 
             <div className="flex items-center gap-3">
