@@ -20,11 +20,11 @@ import {
    Calendar,
    MapPin,
    Users,
-   Clock,
    Search as SearchIcon,
    Filter,
    BookmarkCheck,
    Bookmark,
+   Clock,
 } from "lucide-react";
 import type { EventWithOrganizer } from "@/types/event";
 import axios from "axios";
