@@ -2,6 +2,7 @@ const { Router } = require("express");
 const { requireAuth, getAuth } = require("@clerk/express");
 const eventsRouter = Router();
 const db = require("../db.js");
+const { format } = require("@fast-csv/format");
 
 // get list of events
 eventsRouter.get("/", (req, res) => {
@@ -241,6 +242,60 @@ eventsRouter.delete("/delete-event", (req, res) => {
         }
     );
 });
-
+eventsRouter.get("/:id/export", requireAuth(), (req, res) => {
+    const { id: eventId } = req.params;
+    const { userId } = getAuth(req);
+  
+    // Step 1 — Find current organizer in DB
+    db.query("SELECT id FROM users WHERE clerk_id = ?", [userId], (err1, userRows) => {
+      if (err1) {
+        console.error("DB error 1 (users):", err1);
+        return res.status(500).json({ message: "Database error" });
+      }
+      if (userRows.length === 0)
+        return res.status(403).json({ message: "User not found in database" });
+  
+      const organizerId = userRows[0].id;
+  
+      // Step 2 — Verify event belongs to this organizer
+      db.query("SELECT organizer_id FROM events WHERE id = ?", [eventId], (err2, eventRows) => {
+        if (err2) {
+          console.error("DB error 2 (events):", err2);
+          return res.status(500).json({ message: "Database error" });
+        }
+        if (eventRows.length === 0)
+          return res.status(404).json({ message: "Event not found" });
+        if (eventRows[0].organizer_id !== organizerId)
+          return res.status(403).json({ message: "Not authorized to export this event" });
+  
+        // Step 3 — Get attendee data
+        const attendeeSQL = `
+          SELECT 
+            u.name       AS student_name,
+            u.email      AS email,
+            t.status     AS ticket_status,
+            t.checked_in AS checked_in
+          FROM tickets t
+          JOIN users u ON t.user_id = u.id
+          WHERE t.event_id = ?`;
+  
+        db.query(attendeeSQL, [eventId], (err3, rows) => {
+          if (err3) {
+            console.error("DB error 3 (tickets):", err3);
+            return res.status(500).json({ message: "Database error" });
+          }
+  
+          // Step 4 — Send CSV to browser
+          res.setHeader("Content-Disposition", `attachment; filename=attendees_event_${eventId}.csv`);
+          res.setHeader("Content-Type", "text/csv");
+  
+          const csvStream = format({ headers: true });
+          csvStream.pipe(res);
+          rows.forEach((row) => csvStream.write(row));
+          csvStream.end();
+        });
+      });
+    });
+  });
 
 module.exports = eventsRouter;

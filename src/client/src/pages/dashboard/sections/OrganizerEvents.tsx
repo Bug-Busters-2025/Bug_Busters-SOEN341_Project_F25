@@ -1,9 +1,10 @@
 import { useState, useEffect } from "react";
-import { Plus , ClipboardList, Pencil} from "lucide-react";
+import { Plus , ClipboardList, Pencil, FileSpreadsheet} from "lucide-react";
 import AnalyticsSection from "@/components/dashboard/organizer/AnalyticsSection";
 import { Button } from "@/components/ui/button";
 import EventModal from "@/components/dashboard/organizer/EventModal";
 import axios from "axios";
+import { useAuth } from "@clerk/clerk-react";
 
 
 interface eventData {
@@ -20,15 +21,29 @@ interface eventData {
 }
 
 
-export default function CreateEvent() {
+export default function Events() {
 
     const [open, setOpen] = useState(false);
     const [events, setEvents] = useState<eventData[]>([]);
     const [editEvent, setEditEvent] = useState<eventData | null>(null);
+    const { getToken } = useAuth();
+    const [organizerId, setOrganizerId] = useState<number | null>(null);
 
-    const organizerId = 3; // TEMPORARY until auth system
+    const fetchOrganizerId = async () => {
+      try {
+        const token = await getToken();
+        const res = await axios.get("http://localhost:3000/api/v1/auth/me", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        setOrganizerId(res.data.id);
+      } catch (error) {
+        console.error("❌ Error fetching organizer ID:", error);
+      }
+    };
 
-    const fetchEvents = async () => {
+   
+
+    const fetchEvents = async (organizerId: number) => {
       try
       {
         const response = await axios.get(`http://localhost:3000/api/v1/events/organizer/${organizerId}`);
@@ -45,16 +60,24 @@ export default function CreateEvent() {
           console.log("error fetch events", error);
         }
       };
-      useEffect(() => {fetchEvents();},[]);
+      useEffect(() => {
+        fetchOrganizerId();
+      }, []);
+      useEffect(() => {
+        if (organizerId) {
+          fetchEvents(organizerId); 
+        }
+      }, [organizerId]);
       
       const handleEventCreated = async() => {
-        await fetchEvents()
+        if (organizerId) await fetchEvents(organizerId);
         setOpen(false);
+        
       };
       const handleEventUpdated = async() => {
-        await fetchEvents()
-        setEditEvent(null);
-        setOpen(false);
+        if (organizerId) await fetchEvents(organizerId);
+          setEditEvent(null);
+          setOpen(false);
       }
       const handleEdit = (event: eventData) => {
         setEditEvent(event);
@@ -73,6 +96,34 @@ export default function CreateEvent() {
           });
         }
       }
+      const handleExport = async (eventId: number) => {
+        try {
+          const token = await getToken();
+      
+          const res = await axios.get(
+            `http://localhost:3000/api/v1/events/${eventId}/export`,
+            {
+              responseType: "blob",
+              headers: token ? { Authorization: `Bearer ${token}` } : {},
+            }
+          );
+      
+          
+          const url = window.URL.createObjectURL(new Blob([res.data]));
+          const a = document.createElement("a");
+          a.href = url;
+          a.download = `attendees_event_${eventId}.csv`;
+          document.body.appendChild(a);
+          a.click();
+          a.remove();
+          window.URL.revokeObjectURL(url);
+      
+          console.log(`Exported attendees for event ${eventId}`);
+        } catch (err) {
+          console.error("Error exporting CSV:", err);
+          alert("You are not authorized to export this event’s attendee list.");
+        }
+      };
 
 return (
     <AnalyticsSection
@@ -132,6 +183,14 @@ return (
                     >
                       <Pencil className="h-4 w-4 text-primary" />
                     </Button>
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      className="h-7 w-7 hover:bg-green-100"
+                      onClick={() => handleExport(event.id)}
+                    >
+    <FileSpreadsheet className="h-4 w-4 text-green-600" />
+  </Button>
                     <Button
                       size="icon"
                       variant="ghost"

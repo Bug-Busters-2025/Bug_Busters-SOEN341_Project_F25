@@ -62,4 +62,26 @@ authRouter.post("/sync", requireAuth(), (req, res) => {
         });
       });
 
+
+authRouter.get("/me", requireAuth(), (req, res) => {
+  const { userId } = getAuth(req); 
+  console.log("🔍 Fetching MySQL ID for Clerk user:", userId);
+
+  const sql = "SELECT id, name, email, role FROM users WHERE clerk_id = ?";
+  db.query(sql, [userId], (err, rows) => {
+    if (err) {
+      console.error("❌ Database error:", err);
+      return res.status(500).json({ message: "Database error", error: err });
+    }
+
+    if (rows.length === 0) {
+      console.warn("⚠️ No user found for Clerk ID:", userId);
+      return res.status(404).json({ message: "No user found" });
+    }
+
+    res.status(200).json(rows[0]); 
+  });
+});
+
+
 module.exports = authRouter;
