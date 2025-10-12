@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useUser } from "@clerk/clerk-react";
-import axios from "axios";
+import axios from "axios"
 
 export function useRole() {
   const { user, isLoaded } = useUser();

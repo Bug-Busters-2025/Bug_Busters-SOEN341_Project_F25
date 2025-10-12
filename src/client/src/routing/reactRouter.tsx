@@ -13,6 +13,7 @@ import DashboardLayout from "../pages/dashboard/DashboardLayout";
 import Overview from "../pages/dashboard/sections/Overview";
 import OrganizerAnalytics from "../pages/dashboard/sections/OrganizerAnalytics";
 import OrganizerEvents from "../pages/dashboard/sections/OrganizerEvents";
+import ProtectedRoute from "@/components/protectedRoutes";
 
 const authAppearance = {
   baseTheme: dark, // remove this line if we don't want dark or modify if we want varied box color depending on UI's light/dark theme
@@ -37,16 +38,19 @@ const router = createBrowserRouter([
       {
         id: "dashboard",
         path: "dashboard",
-        Component: DashboardLayout,
-        children: [
+        element: (
+          <ProtectedRoute allowedRoles={["organizer"]}>
+            <DashboardLayout />
+          </ProtectedRoute>),
+          children: [
           { index: true, Component: Overview },
           { id: "analytics", path: "analytics", Component: OrganizerAnalytics },
           { id: "organizer-events", path: "organizer-events", Component: OrganizerEvents },
         ],
 
       },
-      { id: "search", path: "search", Component: Search },
-      { id: "calendar", path: "calendar", Component: Calendar },
+      { id: "search", path: "search", element: ( <ProtectedRoute allowedRoles={["student","organizer","admin"]}><Search/> </ProtectedRoute>) },
+      { id: "calendar", path: "calendar", element: ( <ProtectedRoute allowedRoles={["student","organizer","admin"]}><Calendar/> </ProtectedRoute>) },
 
       // centered + themed clerk routes
       {
