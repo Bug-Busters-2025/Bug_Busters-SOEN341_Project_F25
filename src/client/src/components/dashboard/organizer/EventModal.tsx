@@ -4,6 +4,7 @@ import { ImageUp, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useEffect } from "react";
+import { useAuth } from "@clerk/clerk-react";
 
 
 interface CreateEventModalProps
@@ -30,6 +31,9 @@ export default function CreateEventModal({open, onClose, onEventCreated, onEvent
         ticket_capacity: "",
         ticket_type:"Free",
     });
+
+    const { getToken } = useAuth();
+
     const toLocalDate = (s: string) => new Date(s.replace(" ", "T"))
 
     useEffect(() => {
@@ -118,7 +122,7 @@ export default function CreateEventModal({open, onClose, onEventCreated, onEvent
         try {
             if (isEditMode && eventData?.id)
             {
-
+              const token = await getToken();
                 const newCapacity = parseInt(form.ticket_capacity);
                 const oldCapacity = eventData.ticket_capacity;
                 const remaining = eventData.remaining_tickets;
@@ -128,7 +132,7 @@ export default function CreateEventModal({open, onClose, onEventCreated, onEvent
                     setMessage(`Capacity cannot be lower than ${sold} (tickets already sold).`);
                     return;
                     }
-                await axios.put(`http://localhost:3000/event/${eventData.id}`, {
+                await axios.put(`http://localhost:3000/api/v1/events/${eventData.id}`, {
                     title: form.title,
                     description: form.description,
                     category: form.category,
@@ -138,12 +142,16 @@ export default function CreateEventModal({open, onClose, onEventCreated, onEvent
                     ticket_capacity: parseInt(form.ticket_capacity),
                     remaining_tickets: remaining + (newCapacity - oldCapacity),
                     ticket_type: form.ticket_type,
+                  },
+                  {
+                    headers: token ? { Authorization: `Bearer ${token}` } : {},
                   });
                 setMessage("Event updated successfully!");
                 onEventUpdated?.();
             }
             else {
-                const res = await axios.post("http://localhost:3000/event", {
+                const token = await getToken();
+                const res = await axios.post("http://localhost:3000/api/v1/events/create", {
                     title: form.title,
                     description: form.description,
                     category: form.category,
@@ -153,6 +161,8 @@ export default function CreateEventModal({open, onClose, onEventCreated, onEvent
                     ticket_capacity: parseInt(form.ticket_capacity),
                     remaining_tickets: parseInt(form.ticket_capacity),
                     ticket_type: form.ticket_type,
+                  },{
+                    headers: token ? { Authorization: `Bearer ${token}` } : {},
                   });
                 onEventCreated?.();
             }

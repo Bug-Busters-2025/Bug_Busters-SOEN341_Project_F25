@@ -5,43 +5,51 @@ const db = require("../db.js");
 
 
 authRouter.post("/sync", requireAuth(), (req, res) => {
-    const { userId } = getAuth(req);
-    const {email, name,role="student"} = req.body;
 
-    db.query("SELECT id FROM users WHERE email = ? OR clerk_id = ? ", [email,userId ], (err, rows) => {
-        if (err) {
-            console.error(err);
-            return res.status(500).send("Database error");
+  const { userId } = getAuth(req); 
+  const { email, name, role = "student" } = req.body;
+
+  if (!email || !name) {
+    return res.status(400).json({ message: "Missing name or email" });
+  }
+
+  
+  const checkSQL = "SELECT id, clerk_id FROM users WHERE email = ? OR clerk_id = ?";
+  db.query(checkSQL, [email, userId], (err, rows) => {
+    if (err) {
+      console.error("❌ Database error:", err);
+      return res.status(500).send("Database error");
+    }
+
+    if (rows.length === 0) {
+      
+      const insertSQL = `
+        INSERT INTO users (clerk_id, name, email, role)
+        VALUES (?, ?, ?, ?)
+      `;
+      db.query(insertSQL, [userId, name, email, role], (err2) => {
+        if (err2) {
+          console.error("❌ Insert failed:", err2);
+          return res.status(500).send("Database error");
         }
-
-        if (rows.length === 0) {
-            const insertSQL =
-              "INSERT INTO users (clerk_id, name, email, role) VALUES (?, ?, ?, ?)";
-            db.query(insertSQL, [userId, name, email, role], (err2) => {
-              if (err2) {
-                console.error(err2);
-                return res.status(500).send("Database error");
-              }
-              return res
-                .status(201)
-                .json({ message: `✅ User created as ${role}`, userId });
-            });
-            }
-            else {
-                const updateSQL = `
-                  UPDATE users SET name = ?, role = ?, clerk_id = ?
-                  WHERE email = ?
-                `;
-                db.query(updateSQL, [name, role, userId, email], (err2) => {
-                  if (err2) {
-                    console.error(err2);
-                    return res.status(500).send("Database error");
-                  }
-                  return res.status(200).json({ message: `♻️ User updated as ${role}` });
-                });
-            }
-        });
-    });
+        return res.status(201).json({ message: `✅ User created as ${role}`, userId });
+      });
+    } else {
+      const updateSQL = `
+        UPDATE users
+        SET name = ?, clerk_id = ?
+        WHERE email = ?
+      `;
+      db.query(updateSQL, [name, userId, email], (err2) => {
+        if (err2) {
+          console.error("❌ Update failed:", err2);
+          return res.status(500).send("Database error");
+        }
+        return res.status(200).json({ message: `♻️ User updated as ${role}`, userId });
+      });
+    }
+  });
+});
     authRouter.get("/role/:email", (req, res) => {
         const { email } = req.params;
         if (!email) return res.status(400).send("Email is required");

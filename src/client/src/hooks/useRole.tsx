@@ -16,7 +16,7 @@ export function useRole() {
         if (!email) return;
 
         const response = await axios.get(
-          `http://localhost:3000/api/users/role/${email}`
+          `http://localhost:3000/api/v1/auth/role/${email}`
         );
 
         setRole(response.data.role);

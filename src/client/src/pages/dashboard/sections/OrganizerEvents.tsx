@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import EventModal from "@/components/dashboard/organizer/EventModal";
 import axios from "axios";
 
+
 interface eventData {
   id: number;
   title: string;
@@ -25,12 +26,12 @@ export default function CreateEvent() {
     const [events, setEvents] = useState<eventData[]>([]);
     const [editEvent, setEditEvent] = useState<eventData | null>(null);
 
-    const organizerId = 1; // TEMPORARY until auth system
+    const organizerId = 3; // TEMPORARY until auth system
 
     const fetchEvents = async () => {
       try
       {
-        const response = await axios.get(`http://localhost:3000/events/${organizerId}`);
+        const response = await axios.get(`http://localhost:3000/api/v1/events/organizer/${organizerId}`);
         const now = new Date();
         const upcomingEvents = response.data.filter((event: any) => {
           const eventDate = new Date(event.event_date.replace(" ", "T"));
@@ -63,7 +64,7 @@ export default function CreateEvent() {
 
         if (confirm("Are you sure you want to delete this event?"))
         {
-          axios.delete(`http://localhost:3000/event/${eventId}`)
+          axios.delete(`http://localhost:3000/api/v1/events/${eventId}`)
           .then(() => {
             setEvents(events.filter(event => event.id !== eventId));
           })
