@@ -67,6 +67,7 @@ export default function Search() {
    const [selectedDate, setSelectedDate] = useState<string>("");
    const [searchQuery, setSearchQuery] = useState<string>("");
    const [events, setEvents] = useState<Event[]>([]);
+   const [savedEvents, setSavedEvents] = useState<Event[]>(getSavedEvents());
 
    useEffect(() => {
       const fetchData = async () => {
