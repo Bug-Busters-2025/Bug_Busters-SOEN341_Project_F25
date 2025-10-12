@@ -1,6 +1,7 @@
-import { Router } from "express";
+const express = require("express");
+const db = require("../db.js");
 
-const usersRouter = Router();
+const usersRouter = express.Router();
 
 // get list of users
 usersRouter.get("", (req, res) => {
@@ -10,4 +11,4 @@ usersRouter.get("", (req, res) => {
     });
 });
 
-export default usersRouter;
+module.exports = usersRouter;

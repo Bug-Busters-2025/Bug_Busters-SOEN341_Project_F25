@@ -1,4 +1,4 @@
-import { Router } from "express";
+const { Router } = require("express");
 
 const eventsRouter = Router();
 
@@ -203,4 +203,4 @@ eventsRouter.delete("/delete-event", (req, res) => {
 });
 
 
-export default eventsRouter;
+module.exports = eventsRouter;
