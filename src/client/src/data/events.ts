@@ -37,7 +37,7 @@ export const organizations = [
    "Dance Society",
 ];
 
-export const mockSavedEvents: Event[] = [
+export const mockEvents: Event[] = [
    {
       id: "1",
       title: "Tech Conference 2025",

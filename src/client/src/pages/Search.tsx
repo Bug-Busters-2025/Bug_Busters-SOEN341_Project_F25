@@ -1,4 +1,5 @@
 import { useState, useMemo, useEffect } from "react";
+import axios from "axios";
 import {
    Card,
    CardContent,
@@ -31,9 +32,11 @@ import {
    BookmarkCheck,
 } from "lucide-react";
 
+import { mockEvents } from "@/data/events";
+
 // Mock functions to manage saved events
 const getSavedEvents = () => {
-   return mockSavedEvents;
+   return mockEvents;
 };
 
 const saveEvent = async (event: Event): Promise<boolean> => {
@@ -43,16 +46,16 @@ const saveEvent = async (event: Event): Promise<boolean> => {
    );
 
    if (!isAlreadySaved) {
-      mockSavedEvents.push(event);
+      mockEvents.push(event);
       return true;
    }
    return false;
 };
 
 const unsaveEvent = async (eventId: string): Promise<boolean> => {
-   const index = mockSavedEvents.findIndex((event) => event.id === eventId);
+   const index = mockEvents.findIndex((event) => event.id === eventId);
    if (index > -1) {
-      mockSavedEvents.splice(index, 1);
+      mockEvents.splice(index, 1);
       return true;
    }
    return false;
