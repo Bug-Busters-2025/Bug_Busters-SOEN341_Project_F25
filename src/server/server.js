@@ -1,5 +1,6 @@
 const path = require("node:path");
 require("dotenv").config({ path: path.resolve(__dirname, "../../.env") });
+const userRoutes = require("./routes/users");
 
 const express = require("express");
 const cors = require("cors");
@@ -10,8 +11,9 @@ const app = express();
 const PORT = Number(process.env.PORT || 3000);
 
 app.use(express.json());
-app.use(cors({ origin: "http://localhost:5173", credentials: true }));
+app.use(cors({ origin: "http://localhost:5174", credentials: true }));
 app.use(clerkMiddleware());
+app.use("/api/users", userRoutes);
 
 // public/protected samples
 app.get("/api/public", (_req, res) => res.json({ ok: true }));
@@ -90,7 +92,6 @@ app.get("/event/:event_id", (req, res) => {
 
 // create event // change to const later
 app.post("/event", (req, res) => {
-<<<<<<< HEAD
    let {
       organizer_id,
       title,
@@ -126,27 +127,6 @@ app.post("/event", (req, res) => {
       res.status(400).send("All fields are required");
       return;
    }
-=======
-  const {
-    organizer_id,
-    title,
-    description,
-    category,
-    imageUrl,
-    event_date,
-    location,
-    ticket_capacity,
-    remaining_tickets,
-    ticket_type,
-  } = req.body;
-
-  if (
-    !organizer_id ||
-    !title || !description || !category || !imageUrl ||
-    !event_date || !location || !ticket_capacity ||
-    !remaining_tickets || !ticket_type
-  ) return res.status(400).send("All fields are required");
->>>>>>> 62b1c5b40548bdca291b75d5bee04142b3b54da4
 
   const sql = `
     INSERT INTO events 

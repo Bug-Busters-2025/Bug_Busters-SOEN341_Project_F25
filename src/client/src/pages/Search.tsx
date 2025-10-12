@@ -17,8 +17,6 @@ import { Input } from "@/components/ui/input";
 import {
    categories,
    organizations,
-   mockSavedEvents,
-   type Event,
    type Event,
 } from "@/data/events";
 import { DatePicker } from "@/components/DatePicker";

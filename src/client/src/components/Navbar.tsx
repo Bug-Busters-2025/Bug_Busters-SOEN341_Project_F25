@@ -8,6 +8,7 @@ import {
   SignUpButton,
   UserButton,
 } from "@clerk/clerk-react";
+import SyncUser from "@/components/syncUser";
 
 export default function Navbar() {
   return (
@@ -54,6 +55,7 @@ export default function Navbar() {
             </SignUpButton>
           </SignedOut>
           <SignedIn>
+            <SyncUser />
             <UserButton />
           </SignedIn>
           <ThemeToggle />
