@@ -1,53 +1,81 @@
-import { memo, useState, useEffect, useMemo, type ReactNode } from "react";
-import { Card, CardContent, CardHeader } from "./ui/card";
+import { 
+    memo, 
+    forwardRef, 
+    useState, 
+    useEffect, 
+    useMemo, 
+    useCallback, 
+    type ReactNode 
+} from "react";
 import {
     ChevronLeft,
     ChevronRight,
-    Circle
 } from "lucide-react";
 import type { Event } from "@/data/events";
-import { Badge } from "./ui/badge";
 import {
-    daysOfWeek,
     monthsOfYear,
+    isToday,
     isSameDay,
-    daysInMonth,
-    toYmd
-} from "@/utils/dateTime"
+    getDaysInMonth,
+    toYmd,
+    getFirstDayOfMonth,
+    weekDaysAbreviated
+} from "@/utils/dateTimeUtils"
 
 interface CalendarCardProps {
-    day: number,
-    events: Array<Event>,
+    date: Date,
+    events: Event[],
+    isToday: boolean,
     isInMonth: boolean,
-    isCurrentDate: boolean,
-    highlight: boolean
+    isSelected: boolean,
+    setSelectedDate: (date: Date) => void
 }
 
-const CalendarDayCard = memo(( {day, events, isInMonth, isCurrentDate, highlight} : CalendarCardProps ) => {
-    
+const CalendarDayCard = memo(( {date, events, isToday, isInMonth, isSelected, setSelectedDate} : CalendarCardProps ) => {
+    const hasEvents = events.length !== 0;
     return (
-        <Card className="w-full h-full">
-            <CardHeader className="justify-center items-center">
-                {isCurrentDate ? <Circle fill="red"/> : <></>}
-                {day}
-            </CardHeader>
-            <CardContent>
-                
-            </CardContent>
-        </Card>
-    )
+        <button
+            onClick={() => setSelectedDate(date)}
+            className={`aspect-square p-2 rounded-lg border transition-colors relative ${
+                isToday ? "border-primary bg-primary/5" : "border-border"
+            } ${isSelected ? "bg-accent" : ""} ${
+                events.length !== 0 ? "hover:bg-accent cursor-pointer" : "hover:bg-accent/50"
+            }`}>
+            <div className="flex flex-col h-full">
+                <span className={`text-sm font-medium ${isToday ? "text-primary font-bold" : "text-foreground"}`}>
+                    {date.getDate()}
+                </span>
+                {hasEvents && (
+                <div className="flex-1 flex flex-col gap-0.5 mt-1 overflow-hidden">
+                    {events.slice(0, 2).map((event) => (
+                    <div
+                        key={event.id}
+                        className="text-[10px] leading-tight px-1 py-0.5 rounded bg-primary/20 text-primary truncate">
+                        {event.title}
+                    </div>
+                    ))}
+                    {events.length > 2 && (
+                    <div className="text-[10px] text-muted-foreground">+{events.length - 2} more</div>
+                    )}
+                </div>
+                )}
+            </div>
+        </button>
+    );
 });
 
 interface CalendarProps {
-    events : Array<Event>
+    events : Event[]
 }
 
-const displayedCalendarDays : number = 35;
-
-function CalendarUi( {events} : CalendarProps) {
-    const [date, setDate] = useState<Date>(new Date());
-    const [monthDays, setMonthDays] = useState<CalendarCardProps[]>([]);
-    const [cellCount, setCellCount] = useState<number>(35);
+const CalendarUi = forwardRef<HTMLDivElement, CalendarProps> (( {events} : CalendarProps, ref) => {
+    const [date, setDate]   = useState<Date>(() => {
+        let currDate =new Date()
+        return new Date(currDate.getFullYear(), currDate.getMonth(), currDate.getDate());
+    });
+    const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+    const [monthDays, setMonthDays]       = useState<CalendarCardProps[]>([]);
+    const [cellCount, setCellCount]       = useState<number>(35);
 
     const eventsByDay = useMemo(() => {
         const m = new Map<string, Event[]>();
@@ -58,38 +86,7 @@ function CalendarUi( {events} : CalendarProps) {
                 m.get(k)!.push(ev);
         }
         return m;
-      }, [events]);
-
-    useEffect(() => {
-        const first = new Date(date.getFullYear(), date.getMonth(), 1);
-        const startWeekday = first.getDay(); // 0..6 (Sun..Sat)
-        const dim = daysInMonth(date.getFullYear(), date.getMonth());
-    
-        const cells = startWeekday + dim <= 35 ? 35 : 42;
-        setCellCount(cells);
-    
-        const startDate = new Date(first);
-        startDate.setDate(1 - startWeekday);
-    
-        const today = new Date();
-        const days: CalendarCardProps[] = [];
-        for (let i = 0; i < cells; i++) {
-            const cellDate = new Date(startDate);
-            cellDate.setDate(startDate.getDate() + i);
-        
-            const inMonth = cellDate.getMonth() === date.getMonth();
-            const evts = eventsByDay.get(toYmd(cellDate)) ?? [];
-        
-            days.push({
-                day: cellDate.getDate(),
-                events: evts,
-                isInMonth: inMonth,
-                isCurrentDate: isSameDay(cellDate, today),
-                highlight: false,
-            });
-        }
-        setMonthDays(days);
-      }, [date, eventsByDay]);
+    }, [events]);
 
     const handleDateClick = (increment: number): void => {
         setDate(prev => {
@@ -99,6 +96,47 @@ function CalendarUi( {events} : CalendarProps) {
         });
     };
 
+    const handleDateSelection = useCallback((d: Date) => {
+        setSelectedDate(prev => (prev && isSameDay(prev, d) ? null : d));
+    }, []);
+
+    useEffect(() => {
+        if (selectedDate) {
+            console.log("selectedDate now:", selectedDate);
+        }
+    }, [selectedDate]);
+
+    useEffect(() => {
+        const first = getFirstDayOfMonth(date)
+        const startWeekday = first.getDay();
+        const dim = getDaysInMonth(date);
+    
+        const cells = startWeekday + dim <= 35 ? 35 : 42;
+        setCellCount(cells);
+    
+        const startDate = new Date(first);
+        startDate.setDate(1 - startWeekday);
+        
+        const days: CalendarCardProps[] = [];
+        for (let i = 0; i < cells; i++) {
+            const cellDate = new Date(startDate);
+            cellDate.setDate(startDate.getDate() + i);
+        
+            const inMonth = cellDate.getMonth() === date.getMonth();
+            const evts = eventsByDay.get(toYmd(cellDate)) ?? [];
+        
+            days.push({
+                date: new Date(cellDate.getFullYear(), cellDate.getMonth(), cellDate.getDate()),
+                events: evts,
+                isToday: isToday(cellDate),
+                isInMonth: inMonth,
+                isSelected: selectedDate ? isSameDay(cellDate, selectedDate) : false,
+                setSelectedDate: handleDateSelection
+            });
+        }
+        setMonthDays(days);
+    }, [date, eventsByDay, selectedDate, handleDateSelection]);
+
     const getCalendarDayCard = (p: CalendarCardProps, i: number): ReactNode => (
         <CalendarDayCard
           key={`${i}-${date.getFullYear()}-${date.getMonth()}`}
@@ -107,7 +145,9 @@ function CalendarUi( {events} : CalendarProps) {
     );
 
     return (
-        <div className="flex flex-col p-6">
+        <div 
+            ref={ref}
+            className="flex flex-col p-6">
             <div className="w-full flex flex-row justify-center items-center gap-2">
                 <button
                     className="p-2 border rounded-md hover:bg-accent/50 transition-colors"
@@ -126,7 +166,7 @@ function CalendarUi( {events} : CalendarProps) {
                 </button>
             </div>
             <div className="w-full grid grid-cols-7 pt-2 pb-2">
-                {daysOfWeek.map(d => (
+                {weekDaysAbreviated.map(d => (
                     <div key={d} className="text-center">
                         {d}
                     </div>
@@ -137,6 +177,6 @@ function CalendarUi( {events} : CalendarProps) {
             </div>
         </div>
     );
-}
+});
 
-export default CalendarUi;
+export default memo(CalendarUi);

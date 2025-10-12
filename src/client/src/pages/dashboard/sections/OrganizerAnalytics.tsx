@@ -1,10 +1,13 @@
+import { useRef, useState, useEffect } from "react";
 import 
 {
-    ClipboardList,
-    Calendar, 
-    Users, 
-    TrendingUp, 
-    DollarSign 
+   ClipboardList,
+   Calendar, 
+   Users,
+   User, 
+   TrendingUp,
+   Trash,
+   PenLine
 } 
 from "../../../../node_modules/lucide-react";
 import AnalyticsCard from "@/components/dashboard/organizer/AnalyticsCard";
@@ -12,6 +15,7 @@ import AnalyticsSection from "@/components/dashboard/organizer/AnalyticsSection"
 import EventOverviewCard from "@/components/ui/EventOverviewCard";
 import CalendarUi from "@/components/CalendarUi";
 import { type Event } from "@/data/events";
+import EventCard from "@/components/ui/EventCard";
 
 export const mockEvents: Event[] = [
    {
@@ -137,89 +141,119 @@ export const mockEvents: Event[] = [
 ];
 
 export default function OrganizerAnalytics () {
-    return (
-        <div 
-            id="dsh-org-analytics" 
-            className="h-full w-full flex flex-col p-6 md:p-10 gap-10">
-            <div className="flex flex-col justify-left">
-                <h1 className="text-3xl font-bold tracking-tigh">My Analytics</h1>
-                <p className="text-muted-foreground">Track performance and insights for your events</p>
-            </div>
-            <div className="w-full flex flex-row justify-around pd-6">
-                <AnalyticsCard 
-                    title="Total Events"
-                    icon={<ClipboardList/>}
-                    analytic="53">
-                    <span className="text-green-500">+12%</span> from last month
-                </AnalyticsCard>
-                <AnalyticsCard 
-                    title="Avg Attendees/Event"
-                    icon={<Users/>}
-                    analytic="150">
-                    <span className="text-red-500">-1%</span> from last month
-                </AnalyticsCard>
-                <AnalyticsCard 
-                    title="Total Attendees"
-                    icon={<TrendingUp/>}
-                    analytic="7950">
-                    <span className="text-green-500">+21%</span> from last month
-                </AnalyticsCard>
-                <AnalyticsCard 
-                    title="Total Revenue"
-                    icon={<DollarSign/>}
-                    analytic="$1000">
-                    <span className="text-green-500">+2%</span> from last month
-                </AnalyticsCard>
-            </div>
-            <hr className="border-t-3 border"/>
-            <AnalyticsSection
-                title="Upcoming Events"
-                subtitle="Your scheduled events for the next 30 days"
-                sectionId="upcoming-events"
-                icon={<Calendar/>}>
-                <div className="flex flex-row w-full">
-                    <div className="space-y-4 border rounded-md p-6 overflow-y-scroll overflow-x-none w-1/2">
-                        {mockEvents.length !== 0 ? mockEvents.map((event) => (
-                            <EventOverviewCard 
-                                key={event.id}
-                                event={event}/>
-                        )) : 
-                        (
-                            <p>you have no events in your timeline</p>
-                        )}
-                    </div>
-                    <div className="w-1/2">
-                        <CalendarUi events={mockEvents}/>
-                    </div>
-                </div>
-            </AnalyticsSection>
-            <AnalyticsSection
-                title="My Events"
-                subtitle="Manage your events"
-                sectionId="my-events"
-                icon={<ClipboardList/>}>
-                    <div className="">
-                        
-                    </div>
-            </AnalyticsSection>
-            <AnalyticsSection
-                title="My Statistics"
-                subtitle="View your trends"
-                sectionId="my-stats"
-                icon={<TrendingUp/>}>
-                    <div className="">
-                        
-                    </div>
-            </AnalyticsSection>
-            <AnalyticsSection
-                title="My Cash Flow"
-                subtitle="View your cash flow"
-                sectionId="my-accounting"
-                icon={<DollarSign/>}>
-                    <div className="">
-                        
-                    </div>
-            </AnalyticsSection>
-        </div>
-    )
+   const calendarRef = useRef<HTMLDivElement | null>(null);
+   const [calendarHeight, setCalendarHeight] = useState(0);
+
+  // Measure once on mount
+   useEffect(() => {
+      if (calendarRef.current) {
+         setCalendarHeight(calendarRef.current.clientHeight);
+      }
+   }, []);
+
+  // Keep height in sync with resizes
+   useEffect(() => {
+      if (!calendarRef.current) return;
+      const ro = new ResizeObserver(([entry]) => {
+         setCalendarHeight(entry.contentRect.height);
+      });
+      ro.observe(calendarRef.current);
+      return () => ro.disconnect();
+   }, []);
+
+   return (
+      <div 
+         id="dsh-org-analytics" 
+         className="h-full w-full flex flex-col p-6 md:p-10 gap-10">
+         <div className="flex flex-col justify-left">
+               <h1 className="text-3xl font-bold tracking-tigh">My Analytics</h1>
+               <p className="text-muted-foreground">Track performance and insights for your events</p>
+         </div>
+         <div className="w-full flex flex-row justify-around pd-6">
+               <AnalyticsCard 
+                  title="Total Events"
+                  icon={<ClipboardList/>}
+                  analytic="53">
+                  <span className="text-green-500">+12%</span> from last month
+               </AnalyticsCard>
+               <AnalyticsCard 
+                  title="Avg Attendees/Event"
+                  icon={<Users/>}
+                  analytic="150">
+                  <span className="text-red-500">-1%</span> from last month
+               </AnalyticsCard>
+               <AnalyticsCard 
+                  title="Total Attendees"
+                  icon={<TrendingUp/>}
+                  analytic="7950">
+                  <span className="text-green-500">+21%</span> from last month
+               </AnalyticsCard>
+               <AnalyticsCard 
+                  title="Total Subscribers"
+                  icon={<User/>}
+                  analytic="$1000">
+                  <span className="text-green-500">+2%</span> from last month
+               </AnalyticsCard>
+         </div>
+         <hr className="border-t-3 border"/>
+         <AnalyticsSection
+               title="Upcoming Events"
+               subtitle="Your scheduled events for the next 30 days"
+               sectionId="upcoming-events"
+               icon={<Calendar/>}>
+               <div className="flex flex-row w-full">
+                  <div className="w-2/3">
+                     <CalendarUi 
+                        ref={calendarRef} 
+                        events={mockEvents}/>
+                  </div>
+                  <div 
+                     className="space-y-4 flex-1 border rounded-md p-6 overflow-auto"
+                     style={{ maxHeight: calendarHeight ?? undefined }}>
+                     {mockEvents.length !== 0 ? mockEvents.map((e) => (
+                           <EventOverviewCard 
+                              key={e.id}
+                              event={e}/>
+                     )) : 
+                     (
+                        <p>you have no events in your timeline</p>
+                     )}
+                  </div>
+               </div>
+         </AnalyticsSection>
+         {/* <AnalyticsSection
+               title="My Events"
+               subtitle="Manage your events"
+               sectionId="my-events"
+               icon={<ClipboardList/>}>
+                  <div className="w-full space-x-4 flex flex-row overflow-auto">
+                     {mockEvents.map((event, index) => (
+                        <EventCard 
+                           key={event.id}
+                           event={event}
+                           index={index}>
+                           <div className="flex flex-row items-center justify-center gap-2">
+                              <button className="p-2 border rounded-md hover:bg-primary/90 transition-all duration-200 active:scale-[0.98] font-medium cursor-pointer">
+                                 {<Trash/>}
+                              </button>
+                              <button className="flex p-2 flex-row border rounded-md items-center justify-center gap-2 hover:bg-primary/90  transition-all duration-200 active:scale-[0.98] font-medium cursor-pointer">
+                                 {<PenLine/>}
+                                 Edit
+                              </button>
+                           </div>
+                        </EventCard>
+                     ))}
+                  </div>
+         </AnalyticsSection> */}
+         <AnalyticsSection
+               title="My Subscribers"
+               subtitle="View your subscriber list"
+               sectionId="my-subscibers"
+               icon={<User/>}>
+                  <div className="">
+                     
+                  </div>
+         </AnalyticsSection>
+      </div>
+   )
 }

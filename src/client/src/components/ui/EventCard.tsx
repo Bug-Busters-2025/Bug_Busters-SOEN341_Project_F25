@@ -14,7 +14,7 @@ import {
     Pencil
 } from "lucide-react";
 import { type Event } from "@/data/events";
-import { formatDate } from "@/utils/dateTime";
+import { formatDate } from "@/utils/dateTimeUtils";
 
 interface eventCardProps {
     event: Event,
