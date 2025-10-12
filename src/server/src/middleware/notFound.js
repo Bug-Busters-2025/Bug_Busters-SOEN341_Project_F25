@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
 
-export default function notFound(req: Request, res: Response) {
+export default function notFound(req, res) {
     res.status(404).json({ error: "Not Found" });
 }
