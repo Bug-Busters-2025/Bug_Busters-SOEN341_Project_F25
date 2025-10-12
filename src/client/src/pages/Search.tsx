@@ -14,13 +14,7 @@ import {
    SelectValue,
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
-import {
-   categories,
-   organizations,
-   mockSavedEvents,
-   type Event,
-   type Event,
-} from "@/data/events";
+import { categories, organizations } from "@/data/events";
 import { DatePicker } from "@/components/DatePicker";
 import {
    Calendar,
@@ -28,36 +22,12 @@ import {
    Users,
    Search as SearchIcon,
    Filter,
-   Bookmark,
    BookmarkCheck,
+   Bookmark,
+   Clock,
 } from "lucide-react";
-
-// Mock functions to manage saved events
-const getSavedEvents = () => {
-   return mockSavedEvents;
-};
-
-const saveEvent = async (event: Event): Promise<boolean> => {
-   const savedEvents = getSavedEvents();
-   const isAlreadySaved = savedEvents.some(
-      (savedEvent) => savedEvent.id === event.id
-   );
-
-   if (!isAlreadySaved) {
-      mockSavedEvents.push(event);
-      return true;
-   }
-   return false;
-};
-
-const unsaveEvent = async (eventId: string): Promise<boolean> => {
-   const index = mockSavedEvents.findIndex((event) => event.id === eventId);
-   if (index > -1) {
-      mockSavedEvents.splice(index, 1);
-      return true;
-   }
-   return false;
-};
+import type { EventWithOrganizer } from "@/types/event";
+import axios from "axios";
 
 export default function Search() {
    const [selectedCategory, setSelectedCategory] = useState<string>("All");
@@ -65,18 +35,22 @@ export default function Search() {
       useState<string>("All");
    const [selectedDate, setSelectedDate] = useState<string>("");
    const [searchQuery, setSearchQuery] = useState<string>("");
-   const [events, setEvents] = useState<Event[]>([]);
+   const [events, setEvents] = useState<EventWithOrganizer[]>([]);
+   const [savedEvents, setSavedEvents] = useState<EventWithOrganizer[]>([]);
 
    useEffect(() => {
       const fetchData = async () => {
          try {
-            const response = await axios.get("http://localhost:3000/events");
-            console.log("Events fetched:", response.data);
-            if (response.data) {
-               setEvents(response.data);
-            }
+            const [eventsRes, savedRes] = await Promise.all([
+               axios.get("http://localhost:3000/events"),
+               // here we are getting the saved events for the user id 1 since we have no auth yet
+               axios.get("http://localhost:3000/events/1"),
+            ]);
+
+            setEvents(eventsRes.data);
+            setSavedEvents(savedRes.data);
          } catch (error) {
-            console.error("Error fetching events:", error);
+            console.error("Error fetching data:", error);
          }
       };
 
@@ -86,6 +60,18 @@ export default function Search() {
    const filteredEvents = useMemo(() => {
       return events.filter((event) => {
          if (selectedDate && event.event_date !== selectedDate) {
+            return false;
+         }
+         if (
+            selectedCategory !== "All" &&
+            event.category !== selectedCategory
+         ) {
+            return false;
+         }
+         if (
+            selectedOrganization !== "All" &&
+            event.organizer_name !== selectedOrganization
+         ) {
             return false;
          }
 
@@ -125,28 +111,39 @@ export default function Search() {
       setSearchQuery("");
    };
 
-   const handleSaveEvent = async (event: Event) => {
+   const handleSaveEvent = async (event: EventWithOrganizer) => {
       try {
-         const isCurrentlySaved = savedEvents.some(
-            (savedEvent) => savedEvent.id === event.id
-         );
-
-         if (isCurrentlySaved) {
-            await unsaveEvent(event.id);
+         // here we are saving the event to the db with the user id 1 since we have no auth yet
+         const response = await axios.post("http://localhost:3000/save-event", {
+            user_id: 1,
+            event_id: event.id,
+         });
+         if (response.status === 200) {
             setSavedEvents((prev) =>
-               prev.filter((savedEvent) => savedEvent.id !== event.id)
+               prev.some((e) => e.id === event.id) ? prev : [...prev, event]
             );
-         } else {
-            await saveEvent(event);
-            setSavedEvents((prev) => [...prev, event]);
          }
       } catch (error) {
          console.error("Error saving event:", error);
       }
    };
 
-   const isEventSaved = (eventId: string) => {
-      return savedEvents.some((event) => event.id === eventId);
+   const handleDeleteEvent = async (event: EventWithOrganizer) => {
+      try {
+         const response = await axios.delete(
+            "http://localhost:3000/delete-event",
+            {
+               data: { user_id: 1, event_id: event.id },
+            }
+         );
+         if (response.status === 200) {
+            if (response.status === 200) {
+               setSavedEvents((prev) => prev.filter((e) => e.id !== event.id));
+            }
+         }
+      } catch (error) {
+         console.error("Error deleting event:", error);
+      }
    };
 
    return (
@@ -277,7 +274,9 @@ export default function Search() {
             {filteredEvents.length > 0 ? (
                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                   {filteredEvents.map((event, index) => {
-                     const isSaved = isEventSaved(event.id);
+                     const isSaved = savedEvents.some(
+                        (savedEvent) => savedEvent.id === event.id
+                     );
                      return (
                         <Card
                            key={event.id}
@@ -294,8 +293,12 @@ export default function Search() {
 
                               <button
                                  onClick={(e) => {
+                                    if (isSaved) {
+                                       handleDeleteEvent(event);
+                                    } else {
+                                       handleSaveEvent(event);
+                                    }
                                     e.stopPropagation();
-                                    handleSaveEvent(event);
                                  }}
                                  className={`absolute top-3 left-3 z-10 p-2 rounded-full backdrop-blur-sm transition-all cursor-pointer ${
                                     isSaved
@@ -340,6 +343,10 @@ export default function Search() {
                                     </span>
                                  </div>
                                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                                    <Clock className="h-4 w-4 flex-shrink-0" />
+                                    <span>{event.time}</span>
+                                 </div>
+                                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
                                     <MapPin className="h-4 w-4 flex-shrink-0" />
                                     <span className="truncate">
                                        {event.location}
@@ -347,7 +354,10 @@ export default function Search() {
                                  </div>
                                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
                                     <Users className="h-4 w-4 flex-shrink-0" />
-                                    <span>{event.ticket_capacity} tickets</span>
+                                    <span>
+                                       {event.remaining_tickets}/
+                                       {event.ticket_capacity} attendees
+                                    </span>
                                  </div>
                               </div>
 
@@ -355,7 +365,7 @@ export default function Search() {
                                  <p className="text-sm font-medium text-foreground">
                                     Organized by:{" "}
                                     <span className="text-primary">
-                                       {event.organizer}
+                                       {event.organizer_name}
                                     </span>
                                  </p>
                               </div>
