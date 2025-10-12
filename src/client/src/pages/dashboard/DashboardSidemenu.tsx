@@ -14,7 +14,7 @@ export default function DashboardSidemenu() {
             <NavLink className="hover:underline truncate" to="./analytics">
                Analytics
             </NavLink>
-            <NavLink className="hover:underline truncate" to="./OrganizerEvents">
+            <NavLink className="hover:underline truncate" to="./organizer-events">
              Events
             </NavLink>
          </nav>

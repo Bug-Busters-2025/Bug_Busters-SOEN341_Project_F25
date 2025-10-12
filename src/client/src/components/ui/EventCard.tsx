@@ -69,7 +69,7 @@ function EventCard({event, index, children} : eventCardProps) {
                     <div className="flex items-center gap-2 text-sm text-muted-foreground">
                         <Calendar className="h-4 w-4 flex-shrink-0" />
                         <span className="truncate">
-                        {formatDate(event.date)}
+                        {formatDate(event.event_date)}
                         </span>
                     </div>
                     <div className="flex items-center gap-2 text-sm text-muted-foreground">
@@ -85,8 +85,8 @@ function EventCard({event, index, children} : eventCardProps) {
                     <div className="flex items-center gap-2 text-sm text-muted-foreground">
                         <Users className="h-4 w-4 flex-shrink-0" />
                         <span>
-                        {event.currentAttendees}/
-                        {event.maxAttendees} attendees
+                        {event.ticket_capacity-event.remaining_tickets}/
+                        {event.ticket_capacity} attendees
                         </span>
                     </div>
                 </div>
@@ -94,7 +94,7 @@ function EventCard({event, index, children} : eventCardProps) {
                     <p className="text-sm font-medium text-foreground">
                         Organized by:{" "}
                         <span className="text-primary">
-                        {event.organization}
+                        {event.organizer}
                         </span>
                     </p>
                 </div>

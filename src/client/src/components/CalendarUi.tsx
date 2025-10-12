@@ -80,7 +80,7 @@ const CalendarUi = forwardRef<HTMLDivElement, CalendarProps> (( {events} : Calen
     const eventsByDay = useMemo(() => {
         const m = new Map<string, Event[]>();
         for (const ev of events ?? []) {
-            const k = toYmd(new Date(ev.date));
+            const k = toYmd(new Date(ev.event_date));
 
             if (!m.has(k)) m.set(k, []);
                 m.get(k)!.push(ev);

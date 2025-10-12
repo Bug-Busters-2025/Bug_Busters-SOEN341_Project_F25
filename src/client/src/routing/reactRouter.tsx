@@ -27,34 +27,6 @@ const authAppearance = {
 } as const;
 
 const router = createBrowserRouter([
-<<<<<<< HEAD
-   {
-      id: "root",
-      path: "/",
-      Component: RootLayout,
-      errorElement: <ErrorBoundary />,
-      children: [
-         {
-            id: "home",
-            index: true,
-            Component: Home,
-         },
-         {
-            id: "dashboard",
-            path: "dashboard",
-            Component: DashboardLayout,
-            children: [
-               { index: true, Component: Overview },
-               { path: "analytics", Component: OrganizerAnalytics },
-               { path: "OrganizerEvents", Component: OrganizerEvents },
-            ],
-         },
-         { id: "search", path: "search", Component: Search },
-         { id: "not-found", path: "*", Component: NotFound },
-         { id: "calendar", path: "calendar", Component: Calendar},
-      ],
-   },
-=======
   {
     id: "root",
     path: "/",
@@ -66,7 +38,12 @@ const router = createBrowserRouter([
         id: "dashboard",
         path: "dashboard",
         Component: DashboardLayout,
-        children: [{ index: true, Component: Overview }],
+        children: [
+          { index: true, Component: Overview },
+          { id: "analytics", path: "analytics", Component: OrganizerAnalytics },
+          { id: "organizer-events", path: "organizer-events", Component: OrganizerEvents },
+        ],
+
       },
       { id: "search", path: "search", Component: Search },
       { id: "calendar", path: "calendar", Component: Calendar },
@@ -92,7 +69,6 @@ const router = createBrowserRouter([
       { id: "not-found", path: "*", Component: NotFound },
     ],
   },
->>>>>>> 62b1c5b40548bdca291b75d5bee04142b3b54da4
 ]);
 
 export default router;

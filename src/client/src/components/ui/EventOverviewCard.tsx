@@ -17,11 +17,11 @@ function EventOverviewCard({event} : EventOverviewProp) {
         <div className="w-full flex gap-1 p-2 rounded-lg border bg-card hover:bg-accent/50 transition-colors overflow-hidden">
             <div className="flex flex-col items-center justify-center min-w-[60px] p-1 rounded-lg bg-primary/10">
                 <span className="text-xs font-medium text-muted-foreground uppercase">
-                    {getDayOfWeek(event.date)}
+                    {getDayOfWeek(event.event_date)}
                 </span>
-                <span className="text-2xl font-bold text-primary">{new Date(event.date).getDate()}</span>
+                <span className="text-2xl font-bold text-primary">{new Date(event.event_date).getDate()}</span>
                 <span className="text-xs text-muted-foreground">
-                    {new Date(event.date).toLocaleDateString("en-US", { month: "short" })}
+                    {new Date(event.event_date).toLocaleDateString("en-US", { month: "short" })}
                 </span>
             </div>
             <div className="flex-1">
@@ -44,7 +44,7 @@ function EventOverviewCard({event} : EventOverviewProp) {
                 <div className="flex flex-row gap-1 text-sm text-muted-foreground">
                     <div className="flex items-center gap-0.5">
                         <Users className="size-4"/>
-                        <span>{event.currentAttendees}/{event.maxAttendees} attendees</span>
+                        <span>{event.ticket_capacity-event.remaining_tickets}/{event.ticket_capacity} attendees</span>
                     </div>
                     <Badge variant="outline" className="text-xs">
                         {event.category}
