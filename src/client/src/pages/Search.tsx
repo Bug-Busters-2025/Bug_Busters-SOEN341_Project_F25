@@ -1,10 +1,11 @@
 import { useState, useMemo, useEffect } from "react";
+import axios from "axios";
 import {
    Card,
    CardContent,
-   CardDescription,
    CardHeader,
    CardTitle,
+   CardDescription,
 } from "@/components/ui/card";
 import {
    Select,
@@ -16,6 +17,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { categories, organizations } from "@/data/events";
 import { DatePicker } from "@/components/DatePicker";
+import EventCard from "@/components/ui/EventCard";
 import {
    Calendar,
    MapPin,
