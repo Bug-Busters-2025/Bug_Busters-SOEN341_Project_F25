@@ -8,7 +8,6 @@ import {
    MapPin,
    Clock,
    BookmarkCheck,
-   ArrowLeft,
    Trash2,
    Grid3x3,
    List,
@@ -28,11 +27,13 @@ import {
 import { Input, InputWrapper } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { ButtonGroup } from "@/components/ui/button-group";
+import { useUserId } from "@/hooks/useUserId";
 
 type ViewMode = "grid" | "list";
 type SortMode = "date" | "title" | "attendees";
 
 export default function Calendar() {
+   const { userId, loading: userLoading } = useUserId();
    const [savedEvents, setSavedEvents] = useState<EventWithOrganizer[]>([]);
    const [viewMode, setViewMode] = useState<ViewMode>("grid");
    const [sortMode, setSortMode] = useState<SortMode>("date");
@@ -40,7 +41,11 @@ export default function Calendar() {
 
    useEffect(() => {
       const getSavedEventsData = async () => {
-         const response = await axios.get("http://localhost:3000/events/1");
+         if (!userId) return;
+
+         const response = await axios.get(
+            `http://localhost:3000/api/v1/events/${userId}`
+         );
          console.log("Saved events:", response.data);
          if (response.data) {
             console.log("Saved events:", response.data);
@@ -48,12 +53,18 @@ export default function Calendar() {
          }
       };
       getSavedEventsData();
-   }, []);
+   }, [userId]);
 
    const removeSavedEvent = async (eventId: number) => {
+      if (!userId) {
+         alert("Please sign in to remove events");
+         return;
+      }
+
       try {
-         await axios.delete(`http://localhost:3000/delete-event`, {
-            data: { user_id: 1, event_id: eventId },
+         await axios.post(`http://localhost:3000/api/v1/events/unsave`, {
+            user_id: userId,
+            event_id: eventId,
          });
          setSavedEvents(savedEvents.filter((event) => event.id !== eventId));
       } catch (error) {
@@ -127,6 +138,17 @@ export default function Calendar() {
 
    const groupedEvents = groupEventsByDate();
    const filteredEvents = getFilteredAndSortedEvents();
+
+   if (userLoading) {
+      return (
+         <div className="min-h-screen bg-background flex items-center justify-center">
+            <div className="text-center">
+               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+               <p className="text-muted-foreground">Loading your calendar...</p>
+            </div>
+         </div>
+      );
+   }
 
    return (
       <div className="min-h-screen bg-background">
@@ -397,7 +419,8 @@ export default function Calendar() {
                                                    <Tag className="h-4 w-4 text-secondary-foreground" />
                                                 </div>
                                                 <span className="font-medium">
-                                                   {event.category}
+                                                   {event.category ||
+                                                      "No category specified"}
                                                 </span>
                                              </div>
                                              <div className="flex items-center gap-3 text-muted-foreground">
@@ -428,13 +451,6 @@ export default function Calendar() {
                                                 </span>
                                              </p>
                                           </div>
-
-                                          <button className="w-full mt-4 bg-gradient-to-r from-primary to-primary/80 text-primary-foreground py-2.5 px-4 rounded-lg hover:shadow-lg hover:scale-[1.02] transition-all font-semibold group/btn">
-                                             <span className="flex items-center justify-center gap-2">
-                                                View Details
-                                                <ArrowLeft className="h-4 w-4 rotate-180 group-hover/btn:translate-x-1 transition-transform" />
-                                             </span>
-                                          </button>
                                        </CardContent>
                                     </Card>
                                  ))}
