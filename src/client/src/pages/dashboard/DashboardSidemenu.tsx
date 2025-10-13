@@ -1,5 +1,5 @@
 import { NavLink } from "react-router";
-import { BarChart3, Calendar } from "lucide-react";
+import { BarChart3, Calendar, Ticket } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export default function DashboardSidemenu() {
@@ -14,6 +14,11 @@ export default function DashboardSidemenu() {
          to: "./analytics",
          icon: BarChart3,
          label: "Analytics",
+      },
+      {
+         to: "./my-tickets",
+         icon: Ticket,
+         label: "My Tickets",
       },
    ];
 
