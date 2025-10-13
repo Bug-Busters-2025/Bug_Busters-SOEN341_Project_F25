@@ -36,13 +36,11 @@ export default function MyTickets() {
             </CardHeader>
 
             <CardContent className="space-y-4">
-              {/* QR from backend image endpoint */}
               <div className="flex justify-center bg-white p-4 rounded-lg border">
                 <img
                   src={`/api/v1/tickets/${t.id}/qr`}
                   alt={`QR for ${t.title}`}
                   className="w-48 h-48 object-contain"
-                  /* if your QR endpoint requires cookies/auth: */
                   crossOrigin="use-credentials"
                 />
               </div>
@@ -65,7 +63,6 @@ export default function MyTickets() {
                   className="flex-1 bg-transparent"
                   asChild
                 >
-                  {/* Let users download the same QR the <img> is using */}
                   <a
                     href={`/api/v1/tickets/${t.id}/qr`}
                     download={`ticket-${t.id}-qr.svg`}

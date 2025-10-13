@@ -11,13 +11,6 @@ usersRouter.get("", (req, res) => {
     });
 });
 
-usersRouter.get("tickets/:user_id", (req, res) => {
-    db.query("SELECT * FROM users", (err, results) => {
-        if (err) return res.status(500).send("Database error");
-            res.json(results);
-    });
-});
-
 usersRouter.get("/tickets/:userId", async (req, res) => {
     const userId = Number(req.params.userId);
     if (!Number.isFinite(userId)) {
