@@ -1,5 +1,4 @@
 import { useState, useMemo, useEffect } from "react";
-import axios from "axios";
 import {
    Card,
    CardContent,
@@ -17,7 +16,6 @@ import {
 import { Input } from "@/components/ui/input";
 import { categories, organizations } from "@/data/events";
 import { DatePicker } from "@/components/DatePicker";
-import EventCard from "@/components/ui/EventCard";
 import {
    Calendar,
    MapPin,
@@ -26,41 +24,52 @@ import {
    Filter,
    BookmarkCheck,
    Bookmark,
-   Clock,
 } from "lucide-react";
 import type { EventWithOrganizer } from "@/types/event";
 import axios from "axios";
+import { useUserId } from "@/hooks/useUserId";
+import { Button } from "@/components/ui/button";
 
 export default function Search() {
+   const { userId, loading: userLoading } = useUserId();
    const [selectedCategory, setSelectedCategory] = useState<string>("All");
    const [selectedOrganization, setSelectedOrganization] =
       useState<string>("All");
    const [selectedDate, setSelectedDate] = useState<string>("");
    const [searchQuery, setSearchQuery] = useState<string>("");
+   const [showRegisteredOnly, setShowRegisteredOnly] = useState<boolean>(false);
    const [events, setEvents] = useState<EventWithOrganizer[]>([]);
    const [savedEvents, setSavedEvents] = useState<EventWithOrganizer[]>([]);
+   const [registeredEvents, setRegisteredEvents] = useState<
+      EventWithOrganizer[]
+   >([]);
 
    useEffect(() => {
       const fetchData = async () => {
+         if (!userId) return;
+
          try {
-            const [eventsRes, savedRes] = await Promise.all([
-               axios.get("http://localhost:3000/events"),
-               // here we are getting the saved events for the user id 1 since we have no auth yet
-               axios.get("http://localhost:3000/events/1"),
+            const [eventsRes, savedRes, registeredRes] = await Promise.all([
+               axios.get("http://localhost:3000/api/v1/events"),
+               axios.get(`http://localhost:3000/api/v1/events/${userId}`),
+               axios.get(
+                  `http://localhost:3000/api/v1/events/registered/${userId}`
+               ),
             ]);
 
             setEvents(eventsRes.data);
             setSavedEvents(savedRes.data);
+            setRegisteredEvents(registeredRes.data);
          } catch (error) {
             console.error("Error fetching data:", error);
          }
       };
 
       fetchData();
-   }, []);
+   }, [userId]);
 
    const filteredEvents = useMemo(() => {
-      return events.filter((event) => {
+      let filtered = events.filter((event) => {
          if (selectedDate && event.event_date !== selectedDate) {
             return false;
          }
@@ -79,14 +88,27 @@ export default function Search() {
 
          if (searchQuery) {
             const query = searchQuery.toLowerCase();
-            return (
+            const matchesSearch =
                event.title.toLowerCase().includes(query) ||
                event.description.toLowerCase().includes(query) ||
-               event.location.toLowerCase().includes(query)
-            );
+               event.location.toLowerCase().includes(query);
+            if (!matchesSearch) return false;
+         }
+
+         if (showRegisteredOnly) {
+            return registeredEvents.some((e) => e.id === event.id);
          }
 
          return true;
+      });
+
+      return filtered.sort((a, b) => {
+         const aIsRegistered = registeredEvents.some((e) => e.id === a.id);
+         const bIsRegistered = registeredEvents.some((e) => e.id === b.id);
+
+         if (aIsRegistered && !bIsRegistered) return -1;
+         if (!aIsRegistered && bIsRegistered) return 1;
+         return 0;
       });
    }, [
       events,
@@ -94,6 +116,8 @@ export default function Search() {
       selectedCategory,
       selectedOrganization,
       searchQuery,
+      showRegisteredOnly,
+      registeredEvents,
    ]);
 
    const formatDate = (dateString: string) => {
@@ -111,15 +135,23 @@ export default function Search() {
       setSelectedOrganization("All");
       setSelectedDate("");
       setSearchQuery("");
+      setShowRegisteredOnly(false);
    };
 
    const handleSaveEvent = async (event: EventWithOrganizer) => {
+      if (!userId) {
+         alert("Please sign in to save events");
+         return;
+      }
+
       try {
-         // here we are saving the event to the db with the user id 1 since we have no auth yet
-         const response = await axios.post("http://localhost:3000/save-event", {
-            user_id: 1,
-            event_id: event.id,
-         });
+         const response = await axios.post(
+            "http://localhost:3000/api/v1/events/save",
+            {
+               user_id: userId,
+               event_id: event.id,
+            }
+         );
          if (response.status === 200) {
             setSavedEvents((prev) =>
                prev.some((e) => e.id === event.id) ? prev : [...prev, event]
@@ -131,12 +163,15 @@ export default function Search() {
    };
 
    const handleDeleteEvent = async (event: EventWithOrganizer) => {
+      if (!userId) {
+         alert("Please sign in to unsave events");
+         return;
+      }
+
       try {
-         const response = await axios.delete(
-            "http://localhost:3000/delete-event",
-            {
-               data: { user_id: 1, event_id: event.id },
-            }
+         const response = await axios.post(
+            "http://localhost:3000/api/v1/events/unsave",
+            { user_id: userId, event_id: event.id }
          );
          if (response.status === 200) {
             if (response.status === 200) {
@@ -147,6 +182,80 @@ export default function Search() {
          console.error("Error deleting event:", error);
       }
    };
+
+   const handleRegisterEvent = async (event: EventWithOrganizer) => {
+      if (!userId) {
+         alert("Please sign in to register for events");
+         return;
+      }
+
+      try {
+         const response = await axios.post(
+            "http://localhost:3000/api/v1/events/register",
+            {
+               user_id: userId,
+               event_id: event.id,
+            }
+         );
+         if (response.status === 200) {
+            setRegisteredEvents((prev) =>
+               prev.some((e) => e.id === event.id) ? prev : [...prev, event]
+            );
+            setEvents((prev) =>
+               prev.map((e) =>
+                  e.id === event.id
+                     ? { ...e, remaining_tickets: e.remaining_tickets - 1 }
+                     : e
+               )
+            );
+         }
+      } catch (error: any) {
+         console.error("Error registering for event:", error);
+         alert(error.response?.data?.message || "Failed to register for event");
+      }
+   };
+
+   const handleUnregisterEvent = async (event: EventWithOrganizer) => {
+      if (!userId) {
+         alert("Please sign in to unregister from events");
+         return;
+      }
+
+      try {
+         const response = await axios.post(
+            "http://localhost:3000/api/v1/events/unregister",
+            { user_id: userId, event_id: event.id }
+         );
+         if (response.status === 200) {
+            setRegisteredEvents((prev) =>
+               prev.filter((e) => e.id !== event.id)
+            );
+            setEvents((prev) =>
+               prev.map((e) =>
+                  e.id === event.id
+                     ? { ...e, remaining_tickets: e.remaining_tickets + 1 }
+                     : e
+               )
+            );
+         }
+      } catch (error: any) {
+         console.error("Error unregistering from event:", error);
+         alert(
+            error.response?.data?.message || "Failed to unregister from event"
+         );
+      }
+   };
+
+   if (userLoading) {
+      return (
+         <div className="min-h-screen bg-background p-6 flex items-center justify-center">
+            <div className="text-center">
+               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+               <p className="text-muted-foreground">Loading...</p>
+            </div>
+         </div>
+      );
+   }
 
    return (
       <div className="min-h-screen bg-background p-6">
@@ -255,6 +364,25 @@ export default function Search() {
                </CardContent>
             </Card>
 
+            <div className="mb-4 flex items-center gap-2">
+               <Button
+                  onClick={() => setShowRegisteredOnly(!showRegisteredOnly)}
+                  variant={showRegisteredOnly ? "primary" : "outline"}
+               >
+                  <BookmarkCheck className="h-4 w-4" />
+                  <span className="text-secondary-foreground">
+                     {showRegisteredOnly
+                        ? "Showing Registered Events"
+                        : "Show Registered Events"}
+                  </span>
+               </Button>
+               {registeredEvents.length > 0 && (
+                  <span className="text-muted-foreground">
+                     ({registeredEvents.length} registered)
+                  </span>
+               )}
+            </div>
+
             <div className="mb-6 animate-in fade-in-0 slide-in-from-bottom-2 duration-500">
                <div className="flex items-center gap-2">
                   <p>
@@ -278,6 +406,9 @@ export default function Search() {
                   {filteredEvents.map((event, index) => {
                      const isSaved = savedEvents.some(
                         (savedEvent) => savedEvent.id === event.id
+                     );
+                     const isRegistered = registeredEvents.some(
+                        (registeredEvent) => registeredEvent.id === event.id
                      );
                      return (
                         <Card
@@ -317,7 +448,7 @@ export default function Search() {
 
                               <div className="absolute top-3 right-3">
                                  <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-primary/90 text-primary-foreground backdrop-blur-sm">
-                                    {event.category}
+                                    {event.category || "No category"}
                                  </span>
                               </div>
                               <div className="absolute bottom-3 left-3 right-3">
@@ -345,10 +476,6 @@ export default function Search() {
                                     </span>
                                  </div>
                                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                                    <Clock className="h-4 w-4 flex-shrink-0" />
-                                    <span>{event.time}</span>
-                                 </div>
-                                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
                                     <MapPin className="h-4 w-4 flex-shrink-0" />
                                     <span className="truncate">
                                        {event.location}
@@ -358,7 +485,7 @@ export default function Search() {
                                     <Users className="h-4 w-4 flex-shrink-0" />
                                     <span>
                                        {event.remaining_tickets}/
-                                       {event.ticket_capacity} attendees
+                                       {event.ticket_capacity} spots left
                                     </span>
                                  </div>
                               </div>
@@ -372,9 +499,34 @@ export default function Search() {
                                  </p>
                               </div>
 
-                              <button className="w-full bg-primary text-primary-foreground py-2.5 px-4 rounded-md hover:bg-primary/90 transition-all duration-200 active:scale-[0.98] font-medium cursor-pointer">
-                                 Register Now
-                              </button>
+                              {isRegistered ? (
+                                 <Button
+                                    variant="primary"
+                                    size="lg"
+                                    onClick={(e) => {
+                                       e.stopPropagation();
+                                       handleUnregisterEvent(event);
+                                    }}
+                                    className="w-full bg-green-600 text-white py-2.5 px-4 rounded-md hover:bg-green-700 transition-all duration-200 active:scale-[0.98] font-medium cursor-pointer"
+                                 >
+                                    Registered (Click to Unregister)
+                                 </Button>
+                              ) : (
+                                 <Button
+                                    onClick={(e) => {
+                                       e.stopPropagation();
+                                       handleRegisterEvent(event);
+                                    }}
+                                    variant="primary"
+                                    size="lg"
+                                    className="w-full bg-primary text-primary-foreground py-2.5 px-4 rounded-md hover:bg-primary/90 transition-all duration-200 active:scale-[0.98] font-medium cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                                    disabled={event.remaining_tickets <= 0}
+                                 >
+                                    {event.remaining_tickets > 0
+                                       ? "Register Now"
+                                       : "Event Full"}
+                                 </Button>
+                              )}
                            </CardContent>
                         </Card>
                      );
