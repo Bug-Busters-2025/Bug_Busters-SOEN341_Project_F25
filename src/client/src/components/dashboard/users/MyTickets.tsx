@@ -7,15 +7,16 @@ import { useUserId } from "@/hooks/useUserId";
 
 export default function MyTickets() {
   const { userId, loading: userLoading } = useUserId();
-  const { tickets } = useTickets(userId ?? 0); // <-- use the userId you already have
+  const { tickets } = useTickets(userId ?? 0);
 
   if (userLoading) return <p className="p-6">Loading…</p>;
+  
 
   return (
     <div className="space-y-6 p-6">
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
         {tickets.map((t) => (
-          <Card key={t.id} className="overflow-hidden">
+          <Card key={t.ticket_id} className="overflow-hidden">
             <CardHeader className="pb-4">
               <div className="flex items-start justify-between">
                 <div className="space-y-1">
@@ -36,13 +37,17 @@ export default function MyTickets() {
             </CardHeader>
 
             <CardContent className="space-y-4">
+              {/* ✅ Corrected QR route & field name */}
               <div className="flex justify-center bg-white p-4 rounded-lg border">
-                <img
-                  src={`/api/v1/tickets/${t.id}/qr`}
-                  alt={`QR for ${t.title}`}
-                  className="w-48 h-48 object-contain"
-                  crossOrigin="use-credentials"
-                />
+              {t.qr_code ? (
+    <img
+      src={t.qr_code}
+      alt={`QR for ${t.title}`}
+      className="w-48 h-48 object-contain"
+    />
+  ) : (
+    <p className="text-gray-500 text-sm">No QR available</p>
+  )}
               </div>
 
               <div className="space-y-2 text-sm text-muted-foreground">
@@ -63,13 +68,34 @@ export default function MyTickets() {
                   className="flex-1 bg-transparent"
                   asChild
                 >
-                  <a
-                    href={`/api/v1/tickets/${t.id}/qr`}
-                    download={`ticket-${t.id}-qr.svg`}
-                  >
-                    <Eye className="h-4 w-4 mr-2" />
-                    View / Download QR
-                  </a>
+                
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="flex-1 bg-transparent"
+                  onClick={() => {
+                    if (!t.qr_code) return alert("No QR code available");
+
+    
+                    const base64Data = t.qr_code.split(",")[1];
+                    const byteChars = atob(base64Data);
+                    const byteNumbers = new Array(byteChars.length)
+                    .fill(0)
+                    .map((_, i) => byteChars.charCodeAt(i));
+                    const byteArray = new Uint8Array(byteNumbers);
+                    const blob = new Blob([byteArray], { type: "image/png" });
+
+    
+                    const link = document.createElement("a");
+                    link.href = URL.createObjectURL(blob);
+                    link.download = `ticket-${t.ticket_id}-qr.png`;
+                    link.click();
+                      URL.revokeObjectURL(link.href);
+                     }}
+                      >
+                      <Eye className="h-4 w-4 mr-2" />
+                       Download QR
+                    </Button>
                 </Button>
               </div>
             </CardContent>
@@ -82,7 +108,9 @@ export default function MyTickets() {
           <CardContent className="flex flex-col items-center justify-center py-12">
             <Calendar className="h-12 w-12 text-muted-foreground mb-4" />
             <p className="text-lg font-medium">No tickets yet</p>
-            <p className="text-sm text-muted-foreground">Claim a ticket to see its QR code.</p>
+            <p className="text-sm text-muted-foreground">
+              Claim a ticket to see its QR code.
+            </p>
           </CardContent>
         </Card>
       )}

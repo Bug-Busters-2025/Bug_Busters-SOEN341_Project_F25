@@ -11,10 +11,11 @@ export type TicketStatus = "claimed" | "waitlisted";
 export type TicketType = "free" | "paid";
 
 export interface Ticket {
-  id: number;                // ticket_id
+  ticket_id: number;                  // ticket_id
   status: TicketStatus;
   checkedIn: boolean;
   createdAt: string;
+  qr_code?: string;
 
   eventId: number;
   title: string;
@@ -36,6 +37,7 @@ export type ApiRow = {
   ticket_id: number;
   status: "claimed" | "waitlisted";
   checked_in: 0 | 1;
+  qr_code?: string;
   ticket_created_at: string;
 
   event_id: number;
@@ -54,10 +56,11 @@ export type ApiRow = {
 };
 
 export const toTicket = (r: ApiRow): Ticket => ({
-  id: r.ticket_id,
+  ticket_id: r.ticket_id,
   status: r.status,
   checkedIn: r.checked_in === 1,
   createdAt: r.ticket_created_at,
+  qr_code: r.qr_code,
 
   eventId: r.event_id,
   title: r.event_title,
