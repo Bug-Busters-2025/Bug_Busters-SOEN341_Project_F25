@@ -3,6 +3,7 @@ const { requireAuth, getAuth } = require("@clerk/express");
 const eventsRouter = Router();
 const db = require("../db.js");
 const { format } = require("@fast-csv/format");
+const QRCode = require("qrcode");
 
 // get list of events
 eventsRouter.get("/", (req, res) => {
@@ -252,7 +253,7 @@ eventsRouter.post("/unsave", (req, res) => {
 });
 
 // register student for an event
-eventsRouter.post("/register", (req, res) => {
+eventsRouter.post("/register", async (req, res) => {
    const { user_id, event_id } = req.body;
 
    if (!user_id || !event_id) {
@@ -295,7 +296,7 @@ eventsRouter.post("/register", (req, res) => {
                db.query(
                   `INSERT INTO tickets (user_id, event_id, status) VALUES (?, ?, ?)`,
                   [user_id, event_id, status],
-                  (err, results) => {
+                  async (err, results) => {
                      if (err) {
                         console.error("Database error creating ticket:", err);
                         return res
@@ -304,27 +305,67 @@ eventsRouter.post("/register", (req, res) => {
                      }
 
                      if (status === "claimed") {
-                        db.query(
-                           `UPDATE events SET remaining_tickets = remaining_tickets - 1 WHERE id = ?`,
-                           [event_id],
-                           (err) => {
-                              if (err) {
-                                 console.error(
-                                    "Database error updating tickets:",
-                                    err
-                                 );
-                                 return res
-                                    .status(500)
-                                    .json({ message: "Database error" });
-                              }
+                        const ticketId = results.insertId;
 
-                              res.status(200).json({
-                                 message: "Successfully registered for event",
-                                 status: status,
-                              });
-                           }
-                        );
+                        try {
+                           const payload = `ticket:${ticketId}-user:${user_id}-event:${event_id}`;
+                           console.log("Generating QR for:", payload);
+                           const qrDataUrl = await QRCode.toDataURL(payload);
+                           console.log(
+                              "Generated QR (first 50 chars):",
+                              qrDataUrl.slice(0, 50)
+                           );
+
+                           db.query(
+                              `UPDATE tickets SET qr_code = ? WHERE id = ?`,
+                              [qrDataUrl, ticketId],
+                              (err2) => {
+                                 if (err2) {
+                                    console.error(
+                                       "Error saving QR code:",
+                                       err2
+                                    );
+                                    return res
+                                       .status(500)
+                                       .json({ message: "Error saving QR" });
+                                 }
+
+                                 db.query(
+                                    `UPDATE events SET remaining_tickets = remaining_tickets - 1 WHERE id = ?`,
+                                    [event_id],
+                                    (err3) => {
+                                       if (err3) {
+                                          console.error(
+                                             "Database error updating tickets:",
+                                             err3
+                                          );
+                                          return res
+                                             .status(500)
+                                             .json({
+                                                message: "Database error",
+                                             });
+                                       }
+
+                                       //
+                                       res.status(200).json({
+                                          message:
+                                             "Successfully registered for event",
+                                          status: status,
+                                          qr_code: qrDataUrl,
+                                          ticket_id: ticketId,
+                                       });
+                                    }
+                                 );
+                              }
+                           );
+                        } catch (qrErr) {
+                           console.error("QR generation error:", qrErr);
+                           return res
+                              .status(500)
+                              .json({ message: "QR generation failed" });
+                        }
                      } else {
+                        // waitlisted
                         res.status(200).json({
                            message: "Added to waitlist",
                            status: status,

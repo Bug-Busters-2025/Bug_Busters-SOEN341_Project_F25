@@ -1,33 +1,84 @@
 import { NavLink } from "react-router";
-import { BarChart3, Calendar } from "lucide-react";
+import { BarChart3, Calendar, Ticket } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useRole } from "@/hooks/useRole";
 
 export default function DashboardSidemenu() {
-   const navItems = [
+   const { role, loading } = useRole();
+
+   const organizerNavItems = [
       {
-         to: ".",
+         to: "./organizer-events",
          icon: Calendar,
          label: "My Events",
-         end: true,
       },
       {
          to: "./analytics",
          icon: BarChart3,
          label: "Analytics",
       },
+      {
+         to: "./my-tickets",
+         icon: Ticket,
+         label: "My Tickets",
+      },
    ];
+
+   const studentNavItems = [
+      {
+         to: "./my-tickets",
+         icon: Ticket,
+         label: "My Tickets",
+         end: true,
+      },
+   ];
+
+   const navItems = role === "student" ? studentNavItems : organizerNavItems;
+
+   const panelConfig = {
+      student: {
+         title: "Student Dashboard",
+         description: "Manage your tickets",
+      },
+      organizer: {
+         title: "Organizer Dashboard",
+         description: "Manage your events and analytics",
+      },
+      admin: {
+         title: "Admin Dashboard",
+         description: "Manage your events and analytics",
+      },
+   };
+
+   const currentPanel =
+      (role && panelConfig[role as keyof typeof panelConfig]) ||
+      panelConfig.organizer;
+
+   if (loading) {
+      return (
+         <aside
+            id="dsb-sidemenu"
+            className="relative h-full w-64 border-r border-border bg-card flex flex-col shadow-sm"
+         >
+            <div className="px-6 py-5 border-b border-border">
+               <div className="h-7 w-3/4 bg-muted rounded animate-pulse" />
+               <div className="h-4 w-full bg-muted rounded animate-pulse mt-2" />
+            </div>
+         </aside>
+      );
+   }
 
    return (
       <aside
          id="dsb-sidemenu"
-         className="relative h-full w-64 border-r border-border bg-card flex flex-col shadow-sm"
+         className="relative h-full sm:min-w-64 border-r border-border bg-card flex flex-col shadow-sm"
       >
          <div className="px-6 py-5 border-b border-border">
             <h2 className="text-xl font-bold text-secondary-foreground">
-               Organizer Panel
+               {currentPanel.title}
             </h2>
             <p className="text-xs text-muted-foreground mt-1">
-               Manage your events and analytics
+               {currentPanel.description}
             </p>
          </div>
 
@@ -36,7 +87,6 @@ export default function DashboardSidemenu() {
                <NavLink
                   key={item.to}
                   to={item.to}
-                  end={item.end}
                   className={({ isActive }) =>
                      cn(
                         "flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-all duration-200",

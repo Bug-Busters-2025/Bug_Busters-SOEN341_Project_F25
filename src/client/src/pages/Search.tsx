@@ -324,7 +324,7 @@ export default function Search() {
                            value={selectedCategory}
                            onValueChange={setSelectedCategory}
                         >
-                           <SelectTrigger>
+                           <SelectTrigger className="w-full">
                               <SelectValue placeholder="Select category" />
                            </SelectTrigger>
                            <SelectContent>
@@ -345,7 +345,7 @@ export default function Search() {
                            value={selectedOrganization}
                            onValueChange={setSelectedOrganization}
                         >
-                           <SelectTrigger>
+                           <SelectTrigger className="w-full">
                               <SelectValue placeholder="Select organization" />
                            </SelectTrigger>
                            <SelectContent>
