@@ -14,6 +14,7 @@ import Overview from "../pages/dashboard/sections/Overview";
 import OrganizerAnalytics from "../pages/dashboard/sections/OrganizerAnalytics";
 import OrganizerEvents from "../pages/dashboard/sections/OrganizerEvents";
 import ProtectedRoute from "@/components/protectedRoutes";
+import MyTickets from "@/components/dashboard/users/MyTickets";
 
 const authAppearance = {
    baseTheme: dark,
@@ -38,19 +39,28 @@ const router = createBrowserRouter([
          {
             id: "dashboard",
             path: "dashboard",
-            element: (
-               <ProtectedRoute allowedRoles={["organizer"]}>
-                  <DashboardLayout />
-               </ProtectedRoute>
-            ),
+            Component: DashboardLayout,
             children: [
-               { index: true, Component: OrganizerEvents },
+               { index: true, Component: Overview },
                {
                   id: "analytics",
                   path: "analytics",
-                  Component: OrganizerAnalytics,
+                  element: (
+                     <ProtectedRoute allowedRoles={["organizer"]}>
+                        <OrganizerAnalytics />
+                     </ProtectedRoute>
+                  ),
                },
-               { id: "overview", path: "overview", Component: Overview },
+               { index: true, path: "overview", Component: OrganizerEvents },
+               {
+                  id: "my-tickets",
+                  path: "my-tickets",
+                  element: (
+                     //<ProtectedRoute allowedRoles={["students"]}>
+                        <MyTickets />
+                     //</ProtectedRoute>
+                  ),
+               },
             ],
          },
          {
@@ -58,7 +68,7 @@ const router = createBrowserRouter([
             path: "search",
             element: (
                <ProtectedRoute allowedRoles={["student", "organizer", "admin"]}>
-                  <Search />{" "}
+                  <Search />
                </ProtectedRoute>
             ),
          },
@@ -67,7 +77,7 @@ const router = createBrowserRouter([
             path: "calendar",
             element: (
                <ProtectedRoute allowedRoles={["student", "organizer", "admin"]}>
-                  <Calendar />{" "}
+                  <Calendar />
                </ProtectedRoute>
             ),
          },
