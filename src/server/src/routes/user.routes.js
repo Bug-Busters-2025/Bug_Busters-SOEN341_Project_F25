@@ -5,18 +5,18 @@ const usersRouter = express.Router();
 
 // get list of users
 usersRouter.get("", (req, res) => {
-    db.query("SELECT * FROM users", (err, results) => {
-        if (err) return res.status(500).send("Database error");
-            res.json(results);
-    });
+   db.query("SELECT * FROM users", (err, results) => {
+      if (err) return res.status(500).send("Database error");
+      res.json(results);
+   });
 });
 usersRouter.get("/tickets/:userId", async (req, res) => {
-  const userId = Number(req.params.userId);
-  if (!Number.isFinite(userId)) {
-    return res.status(400).json({ error: "Invalid userId" });
-  }
+   const userId = Number(req.params.userId);
+   if (!Number.isFinite(userId)) {
+      return res.status(400).json({ error: "Invalid userId" });
+   }
 
-  const sql = `
+   const sql = `
     SELECT
       t.id AS ticket_id,
       t.status,
@@ -43,41 +43,45 @@ usersRouter.get("/tickets/:userId", async (req, res) => {
     ORDER BY e.event_date ASC, t.id ASC
   `;
 
-  db.query(sql, [userId], (err, rows) => {
-    if (err) {
-      
-      return res.status(500).json({ error: "Database error", details: err.message });
-    }
-    console.log("🎯 DB result rows:", rows);
-    res.json(rows);
-  });
+   db.query(sql, [userId], (err, rows) => {
+      if (err) {
+         return res
+            .status(500)
+            .json({ error: "Database error", details: err.message });
+      }
+      console.log("🎯 DB result rows:", rows);
+      res.json(rows);
+   });
 });
 
 usersRouter.get("/tickets/:ticketId/qr", (req, res) => {
-  const ticketId = req.params.ticketId;
+   const ticketId = req.params.ticketId;
 
-  db.query("SELECT qr_code FROM tickets WHERE id = ?", [ticketId], (err, result) => {
-    if (err) {
-      console.error("DB error fetching QR:", err);
-      return res.status(500).json({ message: "Database error" });
-    }
+   db.query(
+      "SELECT qr_code FROM tickets WHERE id = ?",
+      [ticketId],
+      (err, result) => {
+         if (err) {
+            console.error("DB error fetching QR:", err);
+            return res.status(500).json({ message: "Database error" });
+         }
 
-    if (result.length === 0 || !result[0].qr_code) {
-      return res.status(404).json({ message: "QR code not found" });
-    }
+         if (result.length === 0 || !result[0].qr_code) {
+            return res.status(404).json({ message: "QR code not found" });
+         }
 
-    const qrDataUrl = result[0].qr_code;
+         const qrDataUrl = result[0].qr_code;
 
-    
-    const base64Data = qrDataUrl.split(",")[1];
-    const imgBuffer = Buffer.from(base64Data, "base64");
+         const base64Data = qrDataUrl.split(",")[1];
+         const imgBuffer = Buffer.from(base64Data, "base64");
 
-    res.writeHead(200, {
-      "Content-Type": "image/png",
-      "Content-Length": imgBuffer.length,
-    });
-    res.end(imgBuffer);
-  });
+         res.writeHead(200, {
+            "Content-Type": "image/png",
+            "Content-Length": imgBuffer.length,
+         });
+         res.end(imgBuffer);
+      }
+   );
 });
 
 module.exports = usersRouter;

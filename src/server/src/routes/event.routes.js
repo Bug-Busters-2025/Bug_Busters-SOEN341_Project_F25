@@ -5,7 +5,6 @@ const db = require("../db.js");
 const { format } = require("@fast-csv/format");
 const QRCode = require("qrcode");
 
-
 // get list of events
 eventsRouter.get("/", (req, res) => {
    const sql = `
@@ -298,6 +297,7 @@ eventsRouter.post("/register", async (req, res) => {
                   `INSERT INTO tickets (user_id, event_id, status) VALUES (?, ?, ?)`,
                   [user_id, event_id, status],
                   async (err, results) => {
+                  async (err, results) => {
                      if (err) {
                         console.error("Database error creating ticket:", err);
                         return res
@@ -312,21 +312,25 @@ eventsRouter.post("/register", async (req, res) => {
                            const payload = `ticket:${ticketId}-user:${user_id}-event:${event_id}`;
                            console.log("Generating QR for:", payload);
                            const qrDataUrl = await QRCode.toDataURL(payload);
-                           console.log("Generated QR (first 50 chars):", qrDataUrl.slice(0, 50));
+                           console.log(
+                              "Generated QR (first 50 chars):",
+                              qrDataUrl.slice(0, 50)
+                           );
 
-                        
                            db.query(
                               `UPDATE tickets SET qr_code = ? WHERE id = ?`,
                               [qrDataUrl, ticketId],
                               (err2) => {
                                  if (err2) {
-                                    console.error("Error saving QR code:", err2);
+                                    console.error(
+                                       "Error saving QR code:",
+                                       err2
+                                    );
                                     return res
                                        .status(500)
                                        .json({ message: "Error saving QR" });
                                  }
 
-                             
                                  db.query(
                                     `UPDATE events SET remaining_tickets = remaining_tickets - 1 WHERE id = ?`,
                                     [event_id],
@@ -338,23 +342,28 @@ eventsRouter.post("/register", async (req, res) => {
                                           );
                                           return res
                                              .status(500)
-                                             .json({ message: "Database error" });
+                                             .json({
+                                                message: "Database error",
+                                             });
                                        }
 
-                                       // 
+                                       //
                                        res.status(200).json({
-                                          message: "Successfully registered for event",
+                                          message:
+                                             "Successfully registered for event",
                                           status: status,
                                           qr_code: qrDataUrl,
                                           ticket_id: ticketId,
                                        });
                                     }
-                                 ); 
+                                 );
                               }
-                           ); 
+                           );
                         } catch (qrErr) {
                            console.error("QR generation error:", qrErr);
-                           return res.status(500).json({ message: "QR generation failed" });
+                           return res
+                              .status(500)
+                              .json({ message: "QR generation failed" });
                         }
                      } else {
                         // waitlisted

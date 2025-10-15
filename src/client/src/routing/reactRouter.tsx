@@ -3,18 +3,18 @@ import { SignIn, SignUp } from "@clerk/clerk-react";
 import { dark } from "@clerk/themes";
 import AuthCentered from "@/components/AuthCentered";
 
-import RootLayout from "./RootLayout";
-import Home from "../pages/Home";
-import NotFound from "../pages/NotFound";
-import Search from "../pages/Search";
-import Calendar from "../pages/Calendar";
-import ErrorBoundary from "../pages/ErrorBoundary";
-import DashboardLayout from "../pages/dashboard/DashboardLayout";
-import Overview from "../pages/dashboard/sections/Overview";
-import OrganizerAnalytics from "../pages/dashboard/sections/OrganizerAnalytics";
-import OrganizerEvents from "../pages/dashboard/sections/OrganizerEvents";
+import RootLayout from "@/routing/RootLayout";
+import NotFound from "@/pages/NotFound";
+import Search from "@/pages/Search";
+import Calendar from "@/pages/Calendar";
+import ErrorBoundary from "@/pages/ErrorBoundary";
+import DashboardLayout from "@/pages/dashboard/DashboardLayout";
+import DashboardRedirect from "@/pages/dashboard/DashboardRedirect";
+import OrganizerAnalytics from "@/pages/dashboard/sections/OrganizerAnalytics";
+import OrganizerEvents from "@/pages/dashboard/sections/OrganizerEvents";
 import ProtectedRoute from "@/components/protectedRoutes";
 import MyTickets from "@/components/dashboard/users/MyTickets";
+import Home from "@/pages/Home";
 
 const authAppearance = {
    baseTheme: dark,
@@ -40,25 +40,30 @@ const router = createBrowserRouter([
             id: "dashboard",
             path: "dashboard",
             Component: DashboardLayout,
+            Component: DashboardLayout,
             children: [
-               { index: true, Component: Overview },
+               { index: true, Component: DashboardRedirect },
+               {
+                  id: "my-tickets",
+                  path: "my-tickets",
+                  Component: MyTickets,
+               },
+               {
+                  id: "organizer-events",
+                  path: "organizer-events",
+                  element: (
+                     <ProtectedRoute allowedRoles={["organizer", "admin"]}>
+                        <OrganizerEvents />
+                     </ProtectedRoute>
+                  ),
+               },
                {
                   id: "analytics",
                   path: "analytics",
                   element: (
-                     <ProtectedRoute allowedRoles={["organizer"]}>
+                     <ProtectedRoute allowedRoles={["organizer", "admin"]}>
                         <OrganizerAnalytics />
                      </ProtectedRoute>
-                  ),
-               },
-               { index: true, path: "overview", Component: OrganizerEvents },
-               {
-                  id: "my-tickets",
-                  path: "my-tickets",
-                  element: (
-                     //<ProtectedRoute allowedRoles={["students"]}>
-                        <MyTickets />
-                     //</ProtectedRoute>
                   ),
                },
             ],
