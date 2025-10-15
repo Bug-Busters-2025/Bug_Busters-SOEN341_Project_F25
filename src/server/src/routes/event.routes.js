@@ -297,7 +297,6 @@ eventsRouter.post("/register", async (req, res) => {
                   `INSERT INTO tickets (user_id, event_id, status) VALUES (?, ?, ?)`,
                   [user_id, event_id, status],
                   async (err, results) => {
-                  async (err, results) => {
                      if (err) {
                         console.error("Database error creating ticket:", err);
                         return res
@@ -340,14 +339,11 @@ eventsRouter.post("/register", async (req, res) => {
                                              "Database error updating tickets:",
                                              err3
                                           );
-                                          return res
-                                             .status(500)
-                                             .json({
-                                                message: "Database error",
-                                             });
+                                          return res.status(500).json({
+                                             message: "Database error",
+                                          });
                                        }
 
-                                       //
                                        res.status(200).json({
                                           message:
                                              "Successfully registered for event",
@@ -372,13 +368,13 @@ eventsRouter.post("/register", async (req, res) => {
                            status: status,
                         });
                      }
-                  } 
-               ); 
+                  }
+               );
             }
-         ); 
-      } 
-   ); 
-}); 
+         );
+      }
+   );
+});
 
 // unregister student from an event
 eventsRouter.post("/unregister", (req, res) => {
