@@ -297,6 +297,7 @@ eventsRouter.post("/register", async (req, res) => {
                   `INSERT INTO tickets (user_id, event_id, status) VALUES (?, ?, ?)`,
                   [user_id, event_id, status],
                   async (err, results) => {
+                  async (err, results) => {
                      if (err) {
                         console.error("Database error creating ticket:", err);
                         return res
@@ -371,13 +372,13 @@ eventsRouter.post("/register", async (req, res) => {
                            status: status,
                         });
                      }
-                  }
-               );
+                  } 
+               ); 
             }
-         );
-      }
-   );
-});
+         ); 
+      } 
+   ); 
+}); 
 
 // unregister student from an event
 eventsRouter.post("/unregister", (req, res) => {
