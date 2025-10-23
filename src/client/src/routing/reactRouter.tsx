@@ -40,7 +40,6 @@ const router = createBrowserRouter([
             id: "dashboard",
             path: "dashboard",
             Component: DashboardLayout,
-            Component: DashboardLayout,
             children: [
                { index: true, Component: DashboardRedirect },
                {

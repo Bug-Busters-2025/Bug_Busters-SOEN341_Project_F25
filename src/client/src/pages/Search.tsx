@@ -29,9 +29,11 @@ import type { EventWithOrganizer } from "@/types/event";
 import axios from "axios";
 import { useUserId } from "@/hooks/useUserId";
 import { Button } from "@/components/ui/button";
+import { useRole } from "@/hooks/useRole";
 
 export default function Search() {
    const { userId, loading: userLoading } = useUserId();
+   const { role } = useRole();
    const [selectedCategory, setSelectedCategory] = useState<string>("All");
    const [selectedOrganization, setSelectedOrganization] =
       useState<string>("All");
@@ -499,7 +501,9 @@ export default function Search() {
                                  </p>
                               </div>
 
-                              {isRegistered ? (
+                              {role === "student" && (
+                                 <>
+                                 {isRegistered ? (
                                  <Button
                                     variant="primary"
                                     size="lg"
@@ -511,7 +515,7 @@ export default function Search() {
                                  >
                                     Registered (Click to Unregister)
                                  </Button>
-                              ) : (
+                                 ) : (
                                  <Button
                                     onClick={(e) => {
                                        e.stopPropagation();
@@ -526,7 +530,11 @@ export default function Search() {
                                        ? "Register Now"
                                        : "Event Full"}
                                  </Button>
-                              )}
+                                 )}
+                                 </>
+                           )}
+
+                              
                            </CardContent>
                         </Card>
                      );
