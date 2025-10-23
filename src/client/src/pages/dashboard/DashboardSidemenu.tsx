@@ -1,5 +1,5 @@
 import { NavLink } from "react-router";
-import { BarChart3, Calendar, Ticket } from "lucide-react";
+import { BarChart3, Bell, Calendar, Ticket } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useRole } from "@/hooks/useRole";
 
@@ -21,6 +21,11 @@ export default function DashboardSidemenu() {
          to: "./my-tickets",
          icon: Ticket,
          label: "My Tickets",
+      },
+       {
+         to: "./notifications",
+         icon: Bell,
+         label: "Notifications",
       },
    ];
 
