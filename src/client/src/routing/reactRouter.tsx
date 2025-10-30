@@ -12,6 +12,7 @@ import DashboardLayout from "@/pages/dashboard/DashboardLayout";
 import DashboardRedirect from "@/pages/dashboard/DashboardRedirect";
 import OrganizerAnalytics from "@/pages/dashboard/sections/OrganizerAnalytics";
 import OrganizerEvents from "@/pages/dashboard/sections/OrganizerEvents";
+import AdminManageUsers from "@/pages/dashboard/sections/AdminManageUsers";
 import ProtectedRoute from "@/components/protectedRoutes";
 import MyTickets from "@/components/dashboard/users/MyTickets";
 import Home from "@/pages/Home";
@@ -63,6 +64,15 @@ const router = createBrowserRouter([
                        <ScanTicketPage />
                      </ProtectedRoute>
                    ),
+               },
+               {
+                  id: "admin-manage",
+                  path: "admin",
+                  element: (
+                     <ProtectedRoute allowedRoles={["admin"]}>
+                        <AdminManageUsers />
+                     </ProtectedRoute>
+                  ),
                },
                {
                   id: "organizer-events",
