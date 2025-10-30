@@ -1,0 +1,37 @@
+name: CI
+
+on:
+  push:
+    branches: ['*']
+  pull_request:
+    branches: ['*']
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install dependencies
+        working-directory: ./src/server
+        run: npm install
+
+      - name: Setup test environment
+        working-directory: ./src/server
+        run: |
+          echo "DB_HOST=localhost" >> .env
+          echo "DB_USER=test" >> .env
+          echo "DB_PASS=test" >> .env
+          echo "DB_NAME=testdb" >> .env
+          echo "NODE_ENV=test" >> .env
+
+      - name: Run Jest tests
+        working-directory: ./src/server
+        run: npm test

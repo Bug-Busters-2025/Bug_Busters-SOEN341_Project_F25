@@ -3,6 +3,8 @@ const dotenv = require("dotenv");
 
 dotenv.config();
 
+const isTestEnv = process.env.NODE_ENV === "test";
+
 const connection = mysql.createConnection({
    host: process.env.DB_HOST,
    user: process.env.DB_USER,
@@ -11,12 +13,13 @@ const connection = mysql.createConnection({
    database: process.env.DB_NAME,
 });
 
-connection.connect((err) => {
-   if (err) {
-      console.error("Error connecting to mySQL:", err);
-      return;
-   }
-   console.log("Connected to mySQL database");
-});
-
+if (!isTestEnv) {
+   connection.connect((err) => {
+     if (err) {
+       console.error("Error connecting to MySQL:", err);
+       return;
+     }
+     console.log("Connected to MySQL database");
+   });
+ }
 module.exports = connection;
