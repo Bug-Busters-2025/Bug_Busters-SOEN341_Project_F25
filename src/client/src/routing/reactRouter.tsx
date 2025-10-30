@@ -18,6 +18,7 @@ import AdminEvents from "@/pages/dashboard/sections/AdminEvents";
 import OrganizerNotifications from "@/pages/dashboard/sections/OrganizerNotifications";
 import MyTickets from "@/components/dashboard/users/MyTickets";
 import Home from "@/pages/Home";
+import OrganizerNotifications from "@/pages/dashboard/sections/OrganizeNotifications";
 
 const authAppearance = {
    baseTheme: dark,
@@ -95,6 +96,15 @@ const router = createBrowserRouter([
                      </ProtectedRoute>
                   ),
                },
+               {
+                  id: "notifications",
+                  path: "notifications",
+                  element: (
+                     <ProtectedRoute allowedRoles={["organizer"]}>
+                        <OrganizerNotifications/>
+                     </ProtectedRoute>
+                  )
+               }
             ],
          },
          {

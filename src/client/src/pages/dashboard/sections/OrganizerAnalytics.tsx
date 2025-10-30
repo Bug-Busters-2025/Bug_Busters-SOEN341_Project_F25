@@ -6,11 +6,13 @@ import EventOverviewCard from "@/components/ui/EventOverviewCard";
 import CalendarUi from "@/components/CalendarUi";
 import { type Event } from "@/data/events";
 import axios from "axios";
+import { useRole } from "@/hooks/useRole";
 
 export default function OrganizerAnalytics() {
    const calendarRef = useRef<HTMLDivElement | null>(null);
    const [events, setEvents] = useState<Event[]>([]);
    const [loading, setLoading] = useState(true);
+   const { role } = useRole();
 
    useEffect(() => {
       const fetchEvents = async () => {
@@ -180,18 +182,20 @@ export default function OrganizerAnalytics() {
                      ))}
                   </div>
          </AnalyticsSection> */}
-         <AnalyticsSection
-            title="My Subscribers"
-            subtitle="View your subscriber list"
-            sectionId="my-subscibers"
-            icon={<User className="h-6 w-6" />}
-         >
-            <div className="rounded-lg border border-border/50 p-8 bg-card/50 backdrop-blur-sm text-center">
-               <p className="text-muted-foreground">
-                  Subscriber management coming soon...
-               </p>
-            </div>
-         </AnalyticsSection>
+         {role === "organizer" && (
+            <AnalyticsSection
+               title="My Subscribers"
+               subtitle="View your subscriber list"
+               sectionId="my-subscibers"
+               icon={<User className="h-6 w-6" />}
+            >
+               <div className="rounded-lg border border-border/50 p-8 bg-card/50 backdrop-blur-sm text-center">
+                  <p className="text-muted-foreground">
+                     Subscriber management coming soon...
+                  </p>
+               </div>
+            </AnalyticsSection>
+         )}
       </div>
    );
 }
