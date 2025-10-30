@@ -1,10 +1,10 @@
-name: CI
+name: CI 
 
 on:
   push:
-    branches: ['*']
+    branches: ["*"]
   pull_request:
-    branches: ['*']
+    branches: ["*"]
 
 jobs:
   test:
@@ -19,56 +19,74 @@ jobs:
         ports:
           - 3306:3306
         options: >-
-          --health-cmd="mysqladmin ping --silent"
-          --health-interval=10s
-          --health-timeout=5s
-          --health-retries=3
+          --health-cmd="mysqladmin ping -h localhost -u root -proot"
+          --health-interval=5s
+          --health-timeout=10s
+          --health-retries=10
 
     env:
-      NODE_ENV: test
       DB_HOST: 127.0.0.1
       DB_USER: root
       DB_PASSWORD: root
-      DB_PORT: 3306
       DB_NAME: campusevents
+      DB_PORT: 3306
+      NODE_ENV: test
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v3
 
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
         with:
           node-version: 20
 
-      - name: Install dependencies
+      - name: Wait for MySQL to start
         run: |
-          cd src/server
-          npm ci
-
-      - name: Wait for MySQL
-        run: |
-          echo  " Waiting for MySQL to be ready..."
+          echo "Waiting for MySQL to be ready..."
           for i in {1..20}; do
-            nc -z 127.0.0.1 3306 && echo " MySQL is up" && break
-            sleep 2
+            if mysqladmin ping -h127.0.0.1 -uroot -proot --silent; then
+              echo "MySQL is ready"
+              break
+            fi
+            echo " Waiting..."
+            sleep 3
           done
 
-      - name: Seed sample data
+      - name: Fix MySQL authentication plugin
         run: |
           sudo apt-get install -y mysql-client
-          mysql -h 127.0.0.1 -u root -proot campusevents <<'EOF'
+          mysql -h 127.0.0.1 -u root -proot -e \
+            "ALTER USER 'root'@'%' IDENTIFIED WITH mysql_native_password BY 'root'; FLUSH PRIVILEGES;"
+
+      - name: Initialize MySQL schema
+        run: |
+          mysql -h 127.0.0.1 -u root -proot campusevents <<EOF
+          CREATE TABLE IF NOT EXISTS users (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            clerk_id VARCHAR(255),
+            name VARCHAR(255),
+            email VARCHAR(255),
+            role VARCHAR(50)
+          );
+
+          CREATE TABLE IF NOT EXISTS tickets (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            event_id INT,
+            user_id INT,
+            checked_in BOOLEAN DEFAULT 0,
+            qr_payload VARCHAR(255)
+          );
+
           CREATE TABLE IF NOT EXISTS events (
             id INT AUTO_INCREMENT PRIMARY KEY,
             title VARCHAR(255),
-            category VARCHAR(100),
-            date DATE
+            description TEXT
           );
-          INSERT INTO events (title, category, date)
-          VALUES ('Campus Concert', 'Music', '2025-11-21');
           EOF
 
+      - name: Install dependencies
+        run: npm ci
+
       - name: Run tests
-        run: |
-          cd src/server
-          npm test
+        run: npm test
