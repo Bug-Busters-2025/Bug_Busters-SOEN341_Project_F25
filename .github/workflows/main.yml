@@ -26,11 +26,14 @@ jobs:
 
     env:
       DB_HOST: 127.0.0.1
-      DB_USER: root
+      DB_USER: ciuser
       DB_PASSWORD: root
       DB_NAME: campusevents
       DB_PORT: 3306
       NODE_ENV: test
+      VITE_CLERK_PUBLISHABLE_KEY: pk_test_dummy
+      CLERK_PUBLISHABLE_KEY: pk_test_dummy
+      CLERK_SECRET_KEY: sk_test_dummy
 
     steps:
       - name: Checkout repository
@@ -41,7 +44,6 @@ jobs:
         with:
           node-version: 20
 
-      # Ensure MySQL is fully ready
       - name: Wait for MySQL to be ready
         run: |
           echo "Waiting for MySQL..."
@@ -53,20 +55,20 @@ jobs:
             sleep 3
           done
 
-      # Install client and fix auth plugin mismatch
       - name: Install MySQL client
         run: sudo apt-get update && sudo apt-get install -y mysql-client
 
-      - name: Fix MySQL authentication plugin
+    
+      - name: Create CI MySQL user 
         run: |
-          mysql -h127.0.0.1 -uroot -proot -e \
-            "ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY 'root'; FLUSH PRIVILEGES;"
+          mysql -h127.0.0.1 -uroot -proot -e "
+            CREATE USER IF NOT EXISTS 'ciuser'@'%' IDENTIFIED WITH mysql_native_password BY 'root';
+            GRANT ALL PRIVILEGES ON *.* TO 'ciuser'@'%' WITH GRANT OPTION;
+            FLUSH PRIVILEGES;"
 
-      # Initialize tables to match what tests expect
       - name: Initialize MySQL schema
         run: |
-          echo "Creating tables..."
-          mysql -h127.0.0.1 -uroot -proot campusevents <<'EOF'
+          mysql -h127.0.0.1 -uciuser -proot campusevents <<'EOF'
           CREATE TABLE IF NOT EXISTS users (
             id INT AUTO_INCREMENT PRIMARY KEY,
             clerk_id VARCHAR(255),
@@ -74,7 +76,6 @@ jobs:
             email VARCHAR(255),
             role VARCHAR(50)
           );
-
           CREATE TABLE IF NOT EXISTS events (
             id INT AUTO_INCREMENT PRIMARY KEY,
             title VARCHAR(255),
@@ -84,7 +85,6 @@ jobs:
             total_tickets INT DEFAULT 0,
             remaining_tickets INT DEFAULT 0
           );
-
           CREATE TABLE IF NOT EXISTS tickets (
             id INT AUTO_INCREMENT PRIMARY KEY,
             event_id INT,
