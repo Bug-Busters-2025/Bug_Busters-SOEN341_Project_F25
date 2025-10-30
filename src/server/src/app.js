@@ -10,7 +10,7 @@ const { clerkMiddleware, requireAuth, getAuth } = require("@clerk/express");
 dotenv.config({ path: path.resolve(__dirname, "../../../.env") });
 
 const app = express();
-app.use(cors({ origin: "http://localhost:5173", credentials: true }));
+app.use(cors({ origin: ["http://localhost:5173","http://192.168.0.143:5173"], credentials: true }));
 app.use(express.json());
 
 app.use("/api/v1", api);

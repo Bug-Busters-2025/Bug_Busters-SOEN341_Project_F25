@@ -7,6 +7,7 @@ import {
    Trash2,
    MapPin,
    Clock,
+   ScanLine,
 } from "lucide-react";
 import AnalyticsSection from "@/components/dashboard/organizer/AnalyticsSection";
 import { Button } from "@/components/ui/button";
@@ -14,6 +15,7 @@ import { Badge } from "@/components/ui/badge";
 import EventModal from "@/components/dashboard/organizer/EventModal";
 import axios from "axios";
 import { useAuth } from "@clerk/clerk-react";
+import  { useNavigate } from "react-router"
 
 interface eventData {
    id: number;
@@ -29,6 +31,7 @@ interface eventData {
 }
 
 export default function Events() {
+   const navigate = useNavigate();
    const [open, setOpen] = useState(false);
    const [events, setEvents] = useState<eventData[]>([]);
    const [editEvent, setEditEvent] = useState<eventData | null>(null);
@@ -43,7 +46,7 @@ export default function Events() {
          });
          setOrganizerId(res.data.id);
       } catch (error) {
-         console.error("❌ Error fetching organizer ID:", error);
+         console.error(" Error fetching organizer ID:", error);
       }
    };
 
@@ -193,6 +196,14 @@ export default function Events() {
 
                               {/* Action buttons */}
                               <div className="absolute top-3 right-3 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                                 <Button
+                                    size="icon"
+                                    variant="secondary"
+                                    className="h-9 w-9 shadow-lg backdrop-blur-sm bg-background/90 hover:bg-primary hover:text-primary-foreground"
+                                    onClick={() => navigate(`/dashboard/scan-ticket?eventId=${event.id}`)}
+                                 >
+                                    <ScanLine className="h-4 w-4" />
+                                 </Button>
                                  <Button
                                     size="icon"
                                     variant="secondary"

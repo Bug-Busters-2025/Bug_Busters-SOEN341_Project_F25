@@ -317,8 +317,8 @@ eventsRouter.post("/register", async (req, res) => {
                            );
 
                            db.query(
-                              `UPDATE tickets SET qr_code = ? WHERE id = ?`,
-                              [qrDataUrl, ticketId],
+                              `UPDATE tickets SET qr_code = ?, qr_payload= ? WHERE id = ?`,
+                              [qrDataUrl, payload,  ticketId],
                               (err2) => {
                                  if (err2) {
                                     console.error(
@@ -541,5 +541,60 @@ eventsRouter.get("/:id/export", requireAuth(), (req, res) => {
       }
    );
 });
+ eventsRouter.post("/check-in", (req,res) => {
+   
+   const  {payload, event_id } = req.body;
+
+   if (!payload || !event_id) {
+      return res.status(400).json({ message: "Payload/event ID missing" });
+   }
+   db.query(
+      'SELECT id, event_id, checked_in FROM tickets WHERE qr_payload = ?',
+      [payload],
+      (err,rows) => {
+         if (err)
+         {
+            console.error(err);
+            return res.status(500).json({ message: "Database error" });
+         }
+
+         if (rows.length === 0) {
+            return  res.status(404).json({ message: "Ticket not found",
+                                           status: "invalid",
+                                          });
+         }
+         const tk = rows[0];
+
+
+         if (tk.event_id !== parseInt(event_id)) {
+            return res.status(403).json({ message: "Ticket does not belong to this event", status: "invalid",});
+
+         }
+
+         if (tk.checked_in === 1) {
+            return res.status(200).json({ status: "already",
+                                          message: "Ticket already checked in",
+                                          });
+         }
+
+
+         db.query(
+            'UPDATE tickets SET checked_in = 1 WHERE id = ?',
+            [tk.id],
+            (updateErr) => { 
+               if (updateErr)
+               {
+                  console.error(updateErr);
+                  return res.status(500).json({ message: "Database error" });
+               }
+               return res.status(200).json({
+                  status: "checked_in",
+                  message: "Ticket successfully checked in",
+               });
+            }
+         );
+      }
+   )
+ });
 
 module.exports = eventsRouter;

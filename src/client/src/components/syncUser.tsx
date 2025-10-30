@@ -16,8 +16,10 @@ export default function SyncUser({
       const sync = async () => {
          try {
             const token = await getToken();
+            const host = window.location.hostname;
             await axios.post(
-               "http://localhost:3000/api/v1/auth/sync",
+               
+               `http://${host}:3000/api/v1/auth/sync`,
                {
                   name: user.fullName,
                   email: user.primaryEmailAddress?.emailAddress,

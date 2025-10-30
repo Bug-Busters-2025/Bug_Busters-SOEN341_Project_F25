@@ -15,6 +15,7 @@ import OrganizerEvents from "@/pages/dashboard/sections/OrganizerEvents";
 import ProtectedRoute from "@/components/protectedRoutes";
 import MyTickets from "@/components/dashboard/users/MyTickets";
 import Home from "@/pages/Home";
+import ScanTicketPage from "@/pages/dashboard/sections/ScanTicketPage";
 
 const authAppearance = {
    baseTheme: dark,
@@ -39,13 +40,21 @@ const router = createBrowserRouter([
          {
             id: "dashboard",
             path: "dashboard",
-            Component: DashboardLayout,
+            element: (
+               <ProtectedRoute allowedRoles={["student", "organizer", "admin"]}>
+                 <DashboardLayout />
+               </ProtectedRoute>
+             ),
             children: [
                { index: true, Component: DashboardRedirect },
                {
                   id: "my-tickets",
                   path: "my-tickets",
                   Component: MyTickets,
+               },
+               {
+                  path: "scan-ticket",
+                  element: <ScanTicketPage />,
                },
                {
                   id: "organizer-events",
