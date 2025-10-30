@@ -94,6 +94,9 @@ jobs:
             FOREIGN KEY (event_id) REFERENCES events(id),
             FOREIGN KEY (user_id) REFERENCES users(id)
           );
+          INSERT INTO events (title, description, date, location, total_tickets, remaining_tickets)
+          VALUES ('Campus Concert', 'Live music night', NOW(), 'Main Hall', 100, 50);
+          INSERT INTO users (name, email, role) VALUES ('Test User', 'testuser@example.com', 'student');
           EOF
 
       - name: Install dependencies
