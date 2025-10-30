@@ -7,8 +7,30 @@ on:
     branches: ['*']
 
 jobs:
-  build-and-test:
+  test:
     runs-on: ubuntu-latest
+
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: campusevents
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping --silent"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=3
+
+    env:
+      NODE_ENV: test
+      DB_HOST: 127.0.0.1
+      DB_USER: root
+      DB_PASSWORD: root
+      DB_PORT: 3306
+      DB_NAME: campusevents
 
     steps:
       - name: Checkout repository
@@ -20,18 +42,33 @@ jobs:
           node-version: 20
 
       - name: Install dependencies
-        working-directory: ./src/server
-        run: npm install
-
-      - name: Setup test environment
-        working-directory: ./src/server
         run: |
-          echo "DB_HOST=localhost" >> .env
-          echo "DB_USER=test" >> .env
-          echo "DB_PASS=test" >> .env
-          echo "DB_NAME=testdb" >> .env
-          echo "NODE_ENV=test" >> .env
+          cd src/server
+          npm ci
 
-      - name: Run Jest tests
-        working-directory: ./src/server
-        run: npm test
+      - name: Wait for MySQL
+        run: |
+          echo  " Waiting for MySQL to be ready..."
+          for i in {1..20}; do
+            nc -z 127.0.0.1 3306 && echo " MySQL is up" && break
+            sleep 2
+          done
+
+      - name: Seed sample data
+        run: |
+          sudo apt-get install -y mysql-client
+          mysql -h 127.0.0.1 -u root -proot campusevents <<'EOF'
+          CREATE TABLE IF NOT EXISTS events (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            title VARCHAR(255),
+            category VARCHAR(100),
+            date DATE
+          );
+          INSERT INTO events (title, category, date)
+          VALUES ('Campus Concert', 'Music', '2025-11-21');
+          EOF
+
+      - name: Run tests
+        run: |
+          cd src/server
+          npm test
