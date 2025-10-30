@@ -33,21 +33,19 @@ jobs:
       NODE_ENV: test
 
     steps:
-  
       - name: Checkout repository
         uses: actions/checkout@v3
-
 
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
           node-version: 20
 
-     
+      # Ensure MySQL is fully ready
       - name: Wait for MySQL to be ready
         run: |
-          echo "Waiting for MySQL to be ready..."
-          for i in {1..20}; do
+          echo "Waiting for MySQL..."
+          for i in {1..30}; do
             if mysqladmin ping -h127.0.0.1 -uroot -proot --silent; then
               echo "MySQL is ready!"
               break
@@ -55,17 +53,20 @@ jobs:
             sleep 3
           done
 
-  
+      # Install client and fix auth plugin mismatch
+      - name: Install MySQL client
+        run: sudo apt-get update && sudo apt-get install -y mysql-client
+
       - name: Fix MySQL authentication plugin
         run: |
-          sudo apt-get install -y mysql-client
-          mysql -h 127.0.0.1 -u root -proot -e \
-            "ALTER USER 'root'@'%' IDENTIFIED WITH mysql_native_password BY 'root'; FLUSH PRIVILEGES;"
+          mysql -h127.0.0.1 -uroot -proot -e \
+            "ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY 'root'; FLUSH PRIVILEGES;"
 
-  
+      # Initialize tables to match what tests expect
       - name: Initialize MySQL schema
         run: |
-          mysql -h 127.0.0.1 -u root -proot campusevents <<EOF
+          echo "Creating tables..."
+          mysql -h127.0.0.1 -uroot -proot campusevents <<'EOF'
           CREATE TABLE IF NOT EXISTS users (
             id INT AUTO_INCREMENT PRIMARY KEY,
             clerk_id VARCHAR(255),
@@ -74,27 +75,31 @@ jobs:
             role VARCHAR(50)
           );
 
+          CREATE TABLE IF NOT EXISTS events (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            title VARCHAR(255),
+            description TEXT,
+            date DATETIME DEFAULT NOW(),
+            location VARCHAR(255),
+            total_tickets INT DEFAULT 0,
+            remaining_tickets INT DEFAULT 0
+          );
+
           CREATE TABLE IF NOT EXISTS tickets (
             id INT AUTO_INCREMENT PRIMARY KEY,
             event_id INT,
             user_id INT,
             checked_in BOOLEAN DEFAULT 0,
-            qr_payload VARCHAR(255)
-          );
-
-          CREATE TABLE IF NOT EXISTS events (
-            id INT AUTO_INCREMENT PRIMARY KEY,
-            title VARCHAR(255),
-            description TEXT
+            qr_payload VARCHAR(255),
+            FOREIGN KEY (event_id) REFERENCES events(id),
+            FOREIGN KEY (user_id) REFERENCES users(id)
           );
           EOF
 
-      
       - name: Install dependencies
+        working-directory: src/server
         run: npm install
-        working-directory: src/server
 
-    
       - name: Run tests
-        run: npm test
         working-directory: src/server
+        run: npm test
