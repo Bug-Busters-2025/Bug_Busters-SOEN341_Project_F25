@@ -13,6 +13,9 @@ import DashboardRedirect from "@/pages/dashboard/DashboardRedirect";
 import OrganizerAnalytics from "@/pages/dashboard/sections/OrganizerAnalytics";
 import OrganizerEvents from "@/pages/dashboard/sections/OrganizerEvents";
 import ProtectedRoute from "@/components/protectedRoutes";
+import AdminAnalytics from "@/pages/dashboard/sections/AdminAnalytics";
+import AdminEvents from "@/pages/dashboard/sections/AdminEvents";
+import OrganizerNotifications from "@/pages/dashboard/sections/OrganizerNotifications";
 import MyTickets from "@/components/dashboard/users/MyTickets";
 import Home from "@/pages/Home";
 
@@ -62,6 +65,33 @@ const router = createBrowserRouter([
                   element: (
                      <ProtectedRoute allowedRoles={["organizer", "admin"]}>
                         <OrganizerAnalytics />
+                     </ProtectedRoute>
+                  ),
+               },
+               {
+                  id: "admin-analytics",
+                  path: "admin-analytics",
+                  element: (
+                     <ProtectedRoute allowedRoles={["admin"]}>
+                        <AdminAnalytics />
+                     </ProtectedRoute>
+                  ),
+               },
+               {
+                  id: "admin-events",
+                  path: "admin-events",
+                  element: (
+                     <ProtectedRoute allowedRoles={["admin"]}>
+                        <AdminEvents />
+                     </ProtectedRoute>
+                  ),
+               },
+               {
+                  id: "notifications",
+                  path: "notifications",
+                  element: (
+                     <ProtectedRoute allowedRoles={["organizer", "admin"]}>
+                        <OrganizerNotifications />
                      </ProtectedRoute>
                   ),
                },
