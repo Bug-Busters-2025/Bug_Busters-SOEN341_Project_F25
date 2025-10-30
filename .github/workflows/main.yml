@@ -88,12 +88,12 @@ jobs:
           CREATE TABLE IF NOT EXISTS tickets (
             id INT AUTO_INCREMENT PRIMARY KEY,
             event_id INT NOT NULL,
-            ser_id INT NOT NULL,
+            user_id INT NOT NULL,
             status ENUM('claimed', 'waitlisted') NOT NULL DEFAULT 'claimed',
             checked_in BOOLEAN NOT NULL DEFAULT 0,
             created_at TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP,
             qr_code TEXT DEFAULT NULL,
-            qr_payload VARCHAR(255) DEFAULT NULL,
+            qr_payload VARCHAR(255) DEFAULT NULL
             );
           INSERT INTO events (title, description, date, location, total_tickets, remaining_tickets)
           VALUES ('Campus Concert', 'Live music night', NOW(), 'Main Hall', 100, 50);
