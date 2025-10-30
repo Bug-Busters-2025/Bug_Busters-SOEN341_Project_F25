@@ -15,6 +15,7 @@ export function useRole() {
             const email = user.primaryEmailAddress?.emailAddress;
             if (!email) return;
 
+            
             const response = await axios.get(
                `http://localhost:3000/api/v1/auth/role/${email}`
             );
