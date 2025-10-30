@@ -50,11 +50,19 @@ const router = createBrowserRouter([
                {
                   id: "my-tickets",
                   path: "my-tickets",
-                  Component: MyTickets,
+                  element: (
+                     <ProtectedRoute allowedRoles={["student"]}>
+                       <MyTickets />
+                     </ProtectedRoute>
+                   ),
                },
                {
                   path: "scan-ticket",
-                  element: <ScanTicketPage />,
+                  element: (
+                     <ProtectedRoute allowedRoles={["organizer", "admin"]}>
+                       <ScanTicketPage />
+                     </ProtectedRoute>
+                   ),
                },
                {
                   id: "organizer-events",

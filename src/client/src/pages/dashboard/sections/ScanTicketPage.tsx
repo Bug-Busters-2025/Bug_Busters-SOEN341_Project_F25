@@ -6,6 +6,7 @@ import AnalyticsSection from "@/components/dashboard/organizer/AnalyticsSection"
 import { useSearchParams } from "react-router";
 import axios from "axios";
 import { Html5Qrcode } from "html5-qrcode";
+import { useAuth } from "@clerk/clerk-react";
 
 export default function ScanTicketPage() {
    const [status, setStatus] = useState<
@@ -18,6 +19,7 @@ export default function ScanTicketPage() {
    const cooldownRef = useRef(false);
    const loadingRef = useRef(false);
    const scanResultRef = useRef<string | null>(null);
+   const { getToken } = useAuth();
 
    useEffect(() => {
       async function startScanner() {
@@ -91,11 +93,17 @@ export default function ScanTicketPage() {
          return;
       }
       try {
+        const token = await getToken();
          const res = await axios.post(
             "http://localhost:3000/api/v1/events/check-in",
             {
                payload: decodedText,
                event_id: eventId,
+            },
+            {
+              headers: {
+                Authorization: `Bearer ${token}`, 
+              },
             }
          );
 
