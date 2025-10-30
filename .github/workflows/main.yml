@@ -58,65 +58,64 @@ jobs:
       - name: Install MySQL client
         run: sudo apt-get update && sudo apt-get install -y mysql-client
 
-    
-      - name: Create CI MySQL user 
+      - name: Create CI MySQL user
         run: |
           mysql -h127.0.0.1 -uroot -proot -e "
             CREATE USER IF NOT EXISTS 'ciuser'@'%' IDENTIFIED WITH mysql_native_password BY 'root';
             GRANT ALL PRIVILEGES ON *.* TO 'ciuser'@'%' WITH GRANT OPTION;
             FLUSH PRIVILEGES;"
 
-            - name: Initialize MySQL schema
-            run: |
-              mysql -h127.0.0.1 -uciuser -proot campusevents <<'EOF'
-              CREATE TABLE IF NOT EXISTS users (
-                id INT AUTO_INCREMENT PRIMARY KEY,
-                name VARCHAR(100) NOT NULL,
-                email VARCHAR(150) NOT NULL,
-                password_hash VARCHAR(255) DEFAULT 'clerk_managed_account',
-                role ENUM('student','organizer','admin') NOT NULL DEFAULT 'student',
-                created_at TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP,
-                clerk_id VARCHAR(255) DEFAULT NULL
-              );
-          
-              CREATE TABLE IF NOT EXISTS events (
-                id INT AUTO_INCREMENT PRIMARY KEY,
-                organizer_id INT NOT NULL,
-                title VARCHAR(255) NOT NULL,
-                description TEXT,
-                category VARCHAR(30),
-                imageUrl VARCHAR(200),
-                event_date DATETIME NOT NULL,
-                location VARCHAR(255),
-                ticket_capacity INT DEFAULT 0,
-                remaining_tickets INT DEFAULT 0,
-                ticket_type ENUM('free', 'paid') DEFAULT 'free',
-                created_at TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP
-              );
-          
-              CREATE TABLE IF NOT EXISTS tickets (
-                id INT AUTO_INCREMENT PRIMARY KEY,
-                event_id INT NOT NULL,
-                user_id INT NOT NULL,
-                status ENUM('claimed', 'waitlisted') NOT NULL DEFAULT 'claimed',
-                checked_in BOOLEAN NOT NULL DEFAULT 0,
-                created_at TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP,
-                qr_code TEXT DEFAULT NULL,
-                qr_payload VARCHAR(255) DEFAULT NULL
-              );
-          
-              CREATE TABLE IF NOT EXISTS userSavedEvents (
-                id INT AUTO_INCREMENT PRIMARY KEY,
-                user_id INT NOT NULL,
-                event_id INT DEFAULT NULL
-              );
-          
-              INSERT INTO users (name, email, role)
-              VALUES ('Test User', 'testuser@example.com', 'student');
-          
-              INSERT INTO events (organizer_id, title, description, category, imageUrl, event_date, location, ticket_capacity, remaining_tickets, ticket_type)
-              VALUES (1, 'Campus Concert', 'Live music night', 'Music', 'https://example.com/img.jpg', NOW(), 'Main Hall', 100, 50, 'free');
-              EOF
+      - name: Initialize MySQL schema
+        run: |
+          mysql -h127.0.0.1 -uciuser -proot campusevents <<'EOF'
+          CREATE TABLE IF NOT EXISTS users (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            name VARCHAR(100) NOT NULL,
+            email VARCHAR(150) NOT NULL,
+            password_hash VARCHAR(255) DEFAULT 'clerk_managed_account',
+            role ENUM('student','organizer','admin') NOT NULL DEFAULT 'student',
+            created_at TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP,
+            clerk_id VARCHAR(255) DEFAULT NULL
+          );
+
+          CREATE TABLE IF NOT EXISTS events (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            organizer_id INT NOT NULL,
+            title VARCHAR(255) NOT NULL,
+            description TEXT,
+            category VARCHAR(30),
+            imageUrl VARCHAR(200),
+            event_date DATETIME NOT NULL,
+            location VARCHAR(255),
+            ticket_capacity INT DEFAULT 0,
+            remaining_tickets INT DEFAULT 0,
+            ticket_type ENUM('free', 'paid') DEFAULT 'free',
+            created_at TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP
+          );
+
+          CREATE TABLE IF NOT EXISTS tickets (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            event_id INT NOT NULL,
+            user_id INT NOT NULL,
+            status ENUM('claimed', 'waitlisted') NOT NULL DEFAULT 'claimed',
+            checked_in BOOLEAN NOT NULL DEFAULT 0,
+            created_at TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP,
+            qr_code TEXT DEFAULT NULL,
+            qr_payload VARCHAR(255) DEFAULT NULL
+          );
+
+          CREATE TABLE IF NOT EXISTS userSavedEvents (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            user_id INT NOT NULL,
+            event_id INT DEFAULT NULL
+          );
+
+          INSERT INTO users (name, email, role)
+          VALUES ('Test User', 'testuser@example.com', 'student');
+
+          INSERT INTO events (organizer_id, title, description, category, imageUrl, event_date, location, ticket_capacity, remaining_tickets, ticket_type)
+          VALUES (1, 'Campus Concert', 'Live music night', 'Music', 'https://example.com/img.jpg', NOW(), 'Main Hall', 100, 50, 'free');
+          EOF
 
       - name: Install dependencies
         working-directory: src/server
