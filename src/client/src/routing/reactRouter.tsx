@@ -12,13 +12,14 @@ import DashboardLayout from "@/pages/dashboard/DashboardLayout";
 import DashboardRedirect from "@/pages/dashboard/DashboardRedirect";
 import OrganizerAnalytics from "@/pages/dashboard/sections/OrganizerAnalytics";
 import OrganizerEvents from "@/pages/dashboard/sections/OrganizerEvents";
+import AdminManageUsers from "@/pages/dashboard/sections/AdminManageUsers";
 import ProtectedRoute from "@/components/protectedRoutes";
 import AdminAnalytics from "@/pages/dashboard/sections/AdminAnalytics";
 import AdminEvents from "@/pages/dashboard/sections/AdminEvents";
 import OrganizerNotifications from "@/pages/dashboard/sections/OrganizerNotifications";
 import MyTickets from "@/components/dashboard/users/MyTickets";
 import Home from "@/pages/Home";
-import OrganizerNotifications from "@/pages/dashboard/sections/OrganizeNotifications";
+import ScanTicketPage from "@/pages/dashboard/sections/ScanTicketPage";
 
 const authAppearance = {
    baseTheme: dark,
@@ -43,13 +44,38 @@ const router = createBrowserRouter([
          {
             id: "dashboard",
             path: "dashboard",
-            Component: DashboardLayout,
+            element: (
+               <ProtectedRoute allowedRoles={["student", "organizer", "admin"]}>
+                 <DashboardLayout />
+               </ProtectedRoute>
+             ),
             children: [
                { index: true, Component: DashboardRedirect },
                {
                   id: "my-tickets",
                   path: "my-tickets",
-                  Component: MyTickets,
+                  element: (
+                     <ProtectedRoute allowedRoles={["student"]}>
+                       <MyTickets />
+                     </ProtectedRoute>
+                   ),
+               },
+               {
+                  path: "scan-ticket",
+                  element: (
+                     <ProtectedRoute allowedRoles={["organizer", "admin"]}>
+                       <ScanTicketPage />
+                     </ProtectedRoute>
+                   ),
+               },
+               {
+                  id: "admin-manage",
+                  path: "admin",
+                  element: (
+                     <ProtectedRoute allowedRoles={["admin"]}>
+                        <AdminManageUsers />
+                     </ProtectedRoute>
+                  ),
                },
                {
                   id: "organizer-events",
