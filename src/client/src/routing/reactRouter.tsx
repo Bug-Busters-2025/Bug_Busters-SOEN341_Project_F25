@@ -117,15 +117,6 @@ const router = createBrowserRouter([
                   id: "notifications",
                   path: "notifications",
                   element: (
-                     <ProtectedRoute allowedRoles={["organizer", "admin"]}>
-                        <OrganizerNotifications />
-                     </ProtectedRoute>
-                  ),
-               },
-               {
-                  id: "notifications",
-                  path: "notifications",
-                  element: (
                      <ProtectedRoute allowedRoles={["organizer"]}>
                         <OrganizerNotifications/>
                      </ProtectedRoute>
