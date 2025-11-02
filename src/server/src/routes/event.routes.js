@@ -17,7 +17,10 @@ eventsRouter.get("/", (req, res) => {
         WHERE events.status = 'PUBLISHED'
     `;
    db.query(sql, (err, results) => {
-      if (err) return res.status(500).send("Database error");
+      if (err) {
+         console.error("Database error in GET /events:", err);
+         return res.status(500).json({ message: "Database error", error: err.message });
+      }
       res.status(200).json(results);
    });
 });
