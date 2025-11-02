@@ -129,7 +129,7 @@ export default function OrganizerAnalytics() {
 
             try {
                 const [myOrgEvensRes] = await Promise.all([
-                // axios.get(`http://localhost:3000/api/v1/events/${userId}`),
+                // axios.get(`http://localhost:3000/api/v1/events/${eventId}/attendees`),
                 axios.get(`http://localhost:3000/api/v1/events/organizer/${userId}`),
                 ]);
                 

@@ -632,5 +632,31 @@ eventsRouter.get("/:id/export", requireAuth(), (req, res) => {
       }); 
    }); 
 }); 
-}); 
+});
+
+
+eventsRouter.get("/:event_id/tickets/summary", (req, res) => {
+  const { event_id } = req.params;
+  const sql = `
+    SELECT
+      e.id                                AS event_id,
+      e.ticket_capacity,
+      e.remaining_tickets,
+      COUNT(t.id)                         AS total_rows,
+      SUM(CASE WHEN t.status='claimed'    THEN 1 ELSE 0 END) AS claimed,
+      SUM(CASE WHEN t.status='waitlisted' THEN 1 ELSE 0 END) AS waitlisted,
+      SUM(CASE WHEN t.checked_in=1        THEN 1 ELSE 0 END) AS checked_in
+    FROM events e
+    LEFT JOIN tickets t ON t.event_id = e.id
+    WHERE e.id = ?
+    GROUP BY e.id, e.ticket_capacity, e.remaining_tickets
+  `;
+  db.query(sql, [event_id], (err, rows) => {
+    if (err) return res.status(500).json({ message: "Database error" });
+    if (rows.length === 0) return res.status(404).json({ message: "Event not found" });
+    res.status(200).json(rows[0]);
+  });
+});
+
+
 module.exports = eventsRouter;
