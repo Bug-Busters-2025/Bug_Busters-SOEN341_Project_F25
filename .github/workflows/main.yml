@@ -90,7 +90,8 @@ jobs:
             ticket_capacity INT DEFAULT 0,
             remaining_tickets INT DEFAULT 0,
             ticket_type ENUM('free', 'paid') DEFAULT 'free',
-            created_at TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP
+            created_at TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP,
+            status ENUM('DELETED','PUBLISHED') NOT NULL DEFAULT 'PUBLISHED'
           );
 
           CREATE TABLE IF NOT EXISTS tickets (
