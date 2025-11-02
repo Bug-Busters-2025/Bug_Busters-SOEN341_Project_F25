@@ -1,54 +1,68 @@
-import { useRef, useState, useEffect } from "react";
-import { ClipboardList, Calendar, Users, User, TrendingUp } from "lucide-react";
+import { useRef, useState, useEffect, useMemo } from "react";
+import { ClipboardList, User, Calendar, Users, TrendingUp } from "lucide-react";
 import AnalyticsCard from "@/components/dashboard/organizer/AnalyticsCard";
 import AnalyticsSection from "@/components/dashboard/organizer/AnalyticsSection";
+import EventCard from "@/components/ui/EventCard";
 import EventOverviewCard from "@/components/ui/EventOverviewCard";
 import CalendarUi from "@/components/CalendarUi";
 import { type Event } from "@/data/events";
+import { useUserId } from "@/hooks/useUserId";
 import axios from "axios";
-import { useRole } from "@/hooks/useRole";
 
 export default function OrganizerAnalytics() {
-   const calendarRef = useRef<HTMLDivElement | null>(null);
-   const [events, setEvents] = useState<Event[]>([]);
-   const [loading, setLoading] = useState(true);
-   const { role } = useRole();
+    const calendarRef = useRef<HTMLDivElement | null>(null);
+    const { userId, loading: userLoading } = useUserId();
+    const [myOrgEvents, setMyOrgEvents] = useState<Event[]>([]);
+    const [loading, setLoading] = useState(true);
+    const sectionRef = useRef<HTMLDivElement | null>(null)
+    const [sectionWidth, setSectionWidth] = useState<number>(0);
 
-   useEffect(() => {
-      const fetchEvents = async () => {
-         try {
-            setLoading(true);
-            const response = await axios.get(
-               "http://localhost:3000/api/v1/events"
-            );
-            const transformedEvents: Event[] = response.data.map(
-               (event: any) => ({
-                  id: event.id.toString(),
-                  title: event.title,
-                  description: event.description,
-                  event_date: event.event_date.split(" ")[0],
-                  location: event.location,
-                  category: event.category,
-                  organizer: event.organizer_name || "Unknown",
-                  imageUrl:
-                     event.image_url ||
-                     "https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=400&h=200&fit=crop",
-                  ticket_type: event.ticket_type,
-                  ticket_capacity: event.ticket_capacity,
-                  remaining_tickets: event.remaining_tickets,
-               })
-            );
-            setEvents(transformedEvents);
-         } catch (error) {
-            console.error("Error fetching events:", error);
-            setEvents([]);
-         } finally {
-            setLoading(false);
-         }
-      };
+    useEffect(() => {
+        const fetchData = async () => {
+            if (!userId) return;
 
-      fetchEvents();
-   }, []);
+            try {
+                const [myOrgEvensRes] = await Promise.all([
+                // axios.get(`http://localhost:3000/api/v1/events/${userId}`),
+                axios.get(`http://localhost:3000/api/v1/events/organizer/${userId}`),
+                ]);
+                
+                // setMyEvents(myEventsRes.data);
+                setMyOrgEvents(myOrgEvensRes.data);
+            } catch (error) {
+                console.error("Error fetching data:", error);
+            } finally {
+                setLoading(false)
+            }
+        };
+
+        fetchData();
+    }, [userId]);
+
+    useEffect(() => {
+        const sectionElement = sectionRef.current;
+        if (!sectionElement) return;
+
+        const observer = new ResizeObserver(entries => {
+            const newWidth = entries[0].contentRect.width; 
+            
+            if (newWidth !== sectionWidth) {
+                setSectionWidth(newWidth);
+            }
+        });
+
+        observer.observe(sectionElement);
+
+        return () => {
+            observer.unobserve(sectionElement);
+        };
+    }, [sectionWidth]);
+
+
+    const revSortedEvents = useMemo(() => {
+        return [...myOrgEvents].sort((a, b) => new Date(a.event_date as any).getTime() - new Date(b.event_date as any).getTime());
+    }, [myOrgEvents]);
+        
 
    return (
       <div
@@ -70,7 +84,7 @@ export default function OrganizerAnalytics() {
                icon={
                   <ClipboardList className="h-5 w-5 text-secondary-foreground" />
                }
-               analytic={events.length}
+               analytic={revSortedEvents.length}
                trend="up"
             >
                <span className="text-green-500 font-semibold">+12%</span> from
@@ -112,7 +126,7 @@ export default function OrganizerAnalytics() {
             sectionId="upcoming-events"
             icon={<Calendar className="h-6 w-6" />}
          >
-            <div className="flex flex-col lg:flex-row w-full gap-6">
+            <div ref={sectionRef} className="flex flex-col lg:flex-row w-full gap-6">
                <div className="w-full lg:w-2/3">
                   <div className="rounded-lg border border-border/50 p-4 bg-card/50 backdrop-blur-sm">
                      {loading ? (
@@ -122,7 +136,7 @@ export default function OrganizerAnalytics() {
                            </p>
                         </div>
                      ) : (
-                        <CalendarUi ref={calendarRef} events={events} />
+                        <CalendarUi ref={calendarRef} events={myOrgEvents} />
                      )}
                   </div>
                </div>
@@ -144,8 +158,8 @@ export default function OrganizerAnalytics() {
                            <p className="text-center text-muted-foreground py-8">
                               Loading events...
                            </p>
-                        ) : events.length !== 0 ? (
-                           events.map((e) => (
+                        ) : revSortedEvents.length !== 0 ? (
+                            revSortedEvents.map((e) => (
                               <EventOverviewCard key={e.id} event={e} />
                            ))
                         ) : (
@@ -158,44 +172,28 @@ export default function OrganizerAnalytics() {
                </div>
             </div>
          </AnalyticsSection>
-         {/* <AnalyticsSection
-               title="My Events"
-               subtitle="Manage your events"
-               sectionId="my-events"
-               icon={<ClipboardList/>}>
-                  <div className="w-full space-x-4 flex flex-row overflow-auto">
-                     {mockEvents.map((event, index) => (
-                        <EventCard 
-                           key={event.id}
-                           event={event}
-                           index={index}>
-                           <div className="flex flex-row items-center justify-center gap-2">
-                              <button className="p-2 border rounded-md hover:bg-primary/90 transition-all duration-200 active:scale-[0.98] font-medium cursor-pointer">
-                                 {<Trash/>}
-                              </button>
-                              <button className="flex p-2 flex-row border rounded-md items-center justify-center gap-2 hover:bg-primary/90  transition-all duration-200 active:scale-[0.98] font-medium cursor-pointer">
-                                 {<PenLine/>}
-                                 Edit
-                              </button>
-                           </div>
-                        </EventCard>
-                     ))}
-                  </div>
-         </AnalyticsSection> */}
-         {role === "organizer" && (
-            <AnalyticsSection
-               title="My Subscribers"
-               subtitle="View your subscriber list"
-               sectionId="my-subscibers"
-               icon={<User className="h-6 w-6" />}
-            >
-               <div className="rounded-lg border border-border/50 p-8 bg-card/50 backdrop-blur-sm text-center">
-                  <p className="text-muted-foreground">
-                     Subscriber management coming soon...
-                  </p>
-               </div>
-            </AnalyticsSection>
-         )}
+         <AnalyticsSection
+            title="My Events"
+            subtitle="Manage your events"
+            sectionId="my-events"
+            icon={<ClipboardList/>}
+        >
+        <div className="space-x-4 flex flex-row flex-nowrap overflow-x-auto"
+             style={{width: `${sectionWidth}px`}}>
+            {revSortedEvents.length !== 0 && revSortedEvents.map((event, index) => (
+                <EventCard 
+                    key={event.id}
+                    event={event}
+                    index={index}
+                    className="min-w-[300px] md:min-w-[350px]"
+                    showOrganizer={false}>
+                    <div className={"flex flex-row items-center justify-center gap-2"}>
+                        <span>{``}</span>
+                    </div>
+                </EventCard>
+                ))}
+            </div>
+        </AnalyticsSection>
       </div>
    );
 }
