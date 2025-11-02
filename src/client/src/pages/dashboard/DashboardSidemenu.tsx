@@ -17,11 +17,6 @@ export default function DashboardSidemenu() {
          icon: BarChart3,
          label: "Analytics",
       },
-      {
-         to: "./my-tickets",
-         icon: Ticket,
-         label: "My Tickets",
-      },
    ];
 
    const studentNavItems = [
