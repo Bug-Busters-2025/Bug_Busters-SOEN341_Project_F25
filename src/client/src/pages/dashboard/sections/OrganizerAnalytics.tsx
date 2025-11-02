@@ -1,5 +1,5 @@
 import { useRef, useState, useEffect, useMemo } from "react";
-import { ClipboardList, Trash, Calendar, Users, TrendingUp, PenLine } from "lucide-react";
+import { ClipboardList, Calendar, Users, TrendingUp } from "lucide-react";
 import AnalyticsCard from "@/components/dashboard/organizer/AnalyticsCard";
 import AnalyticsSection from "@/components/dashboard/organizer/AnalyticsSection";
 import EventCard from "@/components/ui/EventCard";
