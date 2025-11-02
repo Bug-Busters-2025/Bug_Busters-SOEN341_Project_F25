@@ -23,17 +23,17 @@ eventsRouter.get("/", (req, res) => {
 
 //
 eventsRouter.get("/organizer/:organizer_id", (req, res) => {
-   const { organizer_id } = req.params;
+    const { organizer_id } = req.params;
    if (!organizer_id) {
       res.status(400).send("Organizer ID is required");
       return;
    }
 
    const sql = `SELECT events.*, users.name AS organizer_name, users.email AS organizer_email
-   FROM events
-   JOIN users ON events.organizer_id = users.id
-   WHERE events.organizer_id = ?
-   ORDER by event_date ASC`;
+                FROM events
+                JOIN users ON events.organizer_id = users.id
+                WHERE events.organizer_id = ?
+                ORDER by event_date ASC`;
 
    db.query(sql, [organizer_id], (err, results) => {
       if (err) {
