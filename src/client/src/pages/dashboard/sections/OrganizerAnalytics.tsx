@@ -6,8 +6,9 @@ import EventCard from "@/components/ui/EventCard";
 import EventOverviewCard from "@/components/ui/EventOverviewCard";
 import CalendarUi from "@/components/CalendarUi";
 import { type Event } from "@/data/events";
+import { type TicketSummary } from "@/types/tickets";
 import { useUserId } from "@/hooks/useUserId";
-import axios from "axios";
+import axios, { type AxiosResponse } from "axios";
 
 
 const calculateCurrentMonthAttendees = (events: Event[]): [number, string] => { 
@@ -107,83 +108,119 @@ const calculateCurrentMonthEventCount = (events: Event[]): [number, string] => {
 }
 
 export default function OrganizerAnalytics() {
-    const calendarRef = useRef<HTMLDivElement | null>(null);
-    const { userId, loading: userLoading } = useUserId();
-    const [myOrgEvents, setMyOrgEvents] = useState<Event[]>([]);
-    const [loading, setLoading] = useState(true);
-    const sectionRef = useRef<HTMLDivElement | null>(null)
-    const [sectionWidth, setSectionWidth] = useState<number>(0);
+   const calendarRef = useRef<HTMLDivElement | null>(null);
+   const { userId, loading: userLoading } = useUserId();
+   const [myOrgEvents, setMyOrgEvents] = useState<Event[]>([]);
+   const [loading, setLoading] = useState(true);
+   const sectionRef = useRef<HTMLDivElement | null>(null)
+   const [sectionWidth, setSectionWidth] = useState<number>(0);
 
-    const [currentMonthEventCount, setCurrentMonthEventCount] = useState<number>(0);
-    const [countChange, setCountChange] = useState<string>("N/A");
+   const [currentMonthEventCount, setCurrentMonthEventCount] = useState<number>(0);
+   const [countChange, setCountChange] = useState<string>("N/A");
 
-    const [currentMonthAverage, setCurrentMonthAverage] = useState<number>(0);
-    const [averageChange, setAverageChange] = useState<string>("N/A");
+   const [currentMonthAverage, setCurrentMonthAverage] = useState<number>(0);
+   const [averageChange, setAverageChange] = useState<string>("N/A");
 
-    const [currentMonthAttendees, setCurrentMonthAttendees] = useState<number>(0);
-    const [attendeesChange, setAttendeesChange] = useState<string>("N/A");
+   const [currentMonthAttendees, setCurrentMonthAttendees] = useState<number>(0);
+   const [attendeesChange, setAttendeesChange] = useState<string>("N/A");
 
-    useEffect(() => {
-        const fetchData = async () => {
-            if (!userId) return;
+   const [ticketSummaries, setTicketSummaries] = useState<Record<string, TicketSummary>>({});
+   const [summariesLoading, setSummariesLoading] = useState<boolean>(false);
 
-            try {
-                const [myOrgEvensRes] = await Promise.all([
-                // axios.get(`http://localhost:3000/api/v1/events/${eventId}/attendees`),
-                axios.get(`http://localhost:3000/api/v1/events/organizer/${userId}`),
-                ]);
-                
-                // setMyEvents(myEventsRes.data);
-                setMyOrgEvents(myOrgEvensRes.data);
-            } catch (error) {
-                console.error("Error fetching data:", error);
-            } finally {
-                setLoading(false)
+   useEffect(() => {
+      const fetchData = async () => {
+         if (!userId) return;
+
+         try {
+            const [myOrgEvensRes] = await Promise.all([
+               axios.get(`http://localhost:3000/api/v1/events/organizer/${userId}`),
+            ]);
+            setMyOrgEvents(myOrgEvensRes.data);
+         } catch (error) {
+            console.error("Error fetching data:", error);
+         } finally {
+            setLoading(false)
+         }
+      };
+
+      fetchData();
+   }, [userId]);
+
+   useEffect(() => {
+      const [count, countPct] = calculateCurrentMonthEventCount(myOrgEvents);
+      const [avg, avgPct] = calculateAverageAttendees(myOrgEvents);
+      const [att, attPct] = calculateCurrentMonthAttendees(myOrgEvents);
+
+      setCurrentMonthEventCount(count);
+      setCountChange(countPct);
+      setCurrentMonthAverage(avg);
+      setAverageChange(avgPct);
+      setCurrentMonthAttendees(att);
+      setAttendeesChange(attPct);
+   }, [myOrgEvents]);
+
+   useEffect(() => {
+      const sectionElement = sectionRef.current;
+      if (!sectionElement) return;
+
+      const observer = new ResizeObserver(entries => {
+         const newWidth = entries[0].contentRect.width;
+         if (newWidth !== sectionWidth) {
+               setSectionWidth(newWidth);
+         }
+      });
+
+      observer.observe(sectionElement);
+      return () => {
+         observer.unobserve(sectionElement);
+      };
+   }, [sectionWidth]);
+
+   useEffect((): (() => void) => {
+      if (!myOrgEvents || myOrgEvents.length === 0) {
+         setTicketSummaries({});
+         return () => {};
+      }
+
+      let cancelled = false;
+      const fetchSummaries = async (): Promise<void> => {
+         try {
+            setSummariesLoading(true);
+
+            const requests: Promise<readonly [string, TicketSummary | undefined]>[] = myOrgEvents.map(
+               (ev): Promise<readonly [string, TicketSummary | undefined]> =>
+               axios.get<unknown, AxiosResponse<TicketSummary>>(
+                  `http://localhost:3000/api/v1/events/${ev.id}/tickets/summary`
+               )
+               .then((r): readonly [string, TicketSummary] => [ev.id, r.data])
+               .catch((): readonly [string, undefined] => [ev.id, undefined])
+            );
+
+            const pairs: Array<readonly [string, TicketSummary | undefined]> = await Promise.all(requests);
+            if (cancelled) return;
+
+            const dict: Record<string, TicketSummary> = {};
+            for (const [id, data] of pairs) {
+               if (data) dict[id] = data;
             }
-        };
+            setTicketSummaries(dict);
+         } finally {
+            if (!cancelled) setSummariesLoading(false);
+         }
+      };
 
-        fetchData();
-    }, [userId]);
+      void fetchSummaries();
+      return () => {
+         cancelled = true;
+      };
+   }, [myOrgEvents]);
 
-    useEffect(() => {
-        const [count, countPct] = calculateCurrentMonthEventCount(myOrgEvents);
-        const [avg, avgPct] = calculateAverageAttendees(myOrgEvents);
-        const [att, attPct] = calculateCurrentMonthAttendees(myOrgEvents);
-
-        setCurrentMonthEventCount(count);
-        setCountChange(countPct);
-        setCurrentMonthAverage(avg);
-        setAverageChange(avgPct);
-        setCurrentMonthAttendees(att);
-        setAttendeesChange(attPct);
-    }, [myOrgEvents]);
-
-    useEffect(() => {
-        const sectionElement = sectionRef.current;
-        if (!sectionElement) return;
-
-        const observer = new ResizeObserver(entries => {
-            const newWidth = entries[0].contentRect.width; 
-            
-            if (newWidth !== sectionWidth) {
-                setSectionWidth(newWidth);
-            }
-        });
-
-        observer.observe(sectionElement);
-
-        return () => {
-            observer.unobserve(sectionElement);
-        };
-    }, [sectionWidth]);
-
-
-    const sortedEvents = useMemo(() => {
-        return [...myOrgEvents].sort((a, b) => new Date(a.event_date as any).getTime() - new Date(b.event_date as any).getTime());
-    }, [myOrgEvents]);
-        
-    const trendFrom = (s: string): "up" | "down" | "neutral" =>
-        s.includes("+") ? "up" : s.includes("-") ? "down" : "neutral";
+   const revSortedEvents = useMemo(() => {
+      return [...myOrgEvents].sort((a, b) => new Date(b.event_date as any).getTime() - new Date(a.event_date as any).getTime());
+   }, [myOrgEvents]);
+      
+   const trendFrom = (s: string): "up" | "down" | "neutral" =>
+      s.includes("+") ? "up" : s.includes("-") ? "down" : "neutral";
 
    return (
       <div
@@ -202,14 +239,11 @@ export default function OrganizerAnalytics() {
          <div className="flex flex-row justify-center gap-15">
             <AnalyticsCard
                title="Total Events"
-               icon={
-                  <ClipboardList className="h-5 w-5 text-secondary-foreground" />
-               }
+               icon={<ClipboardList className="h-5 w-5 text-secondary-foreground"/>}
                analytic={currentMonthEventCount}
                trend={trendFrom(countChange)}
             >
-               <span className="text-green-500 font-semibold">{countChange}</span> from
-               last month
+               <span className="text-green-500 font-semibold">{countChange}</span> from last month
             </AnalyticsCard>
             <AnalyticsCard
                title="Avg Attendees/Event"
@@ -217,19 +251,15 @@ export default function OrganizerAnalytics() {
                analytic={currentMonthAverage}
                trend={trendFrom(averageChange)}
             >
-               <span className="text-red-500 font-semibold">{averageChange}</span> from last
-               month
+               <span className="text-red-500 font-semibold">{averageChange}</span> from last month
             </AnalyticsCard>
             <AnalyticsCard
                title="Total Attendees"
-               icon={
-                  <TrendingUp className="h-5 w-5 text-secondary-foreground" />
-               }
+               icon={<TrendingUp className="h-5 w-5 text-secondary-foreground"/>}
                analytic={currentMonthAttendees}
                trend={trendFrom(attendeesChange)}
             >
-               <span className="text-green-500 font-semibold">{attendeesChange}</span> from
-               last month
+               <span className="text-green-500 font-semibold">{attendeesChange}</span> from last month
             </AnalyticsCard>
          </div>
          <AnalyticsSection
@@ -270,8 +300,8 @@ export default function OrganizerAnalytics() {
                            <p className="text-center text-muted-foreground py-8">
                               Loading events...
                            </p>
-                        ) : sortedEvents.length !== 0 ? (
-                            sortedEvents.map((e) => (
+                        ) : revSortedEvents.length !== 0 ? (
+                            revSortedEvents.map((e) => (
                               <EventOverviewCard key={e.id} event={e} />
                            ))
                         ) : (
@@ -290,20 +320,28 @@ export default function OrganizerAnalytics() {
             sectionId="my-events"
             icon={<ClipboardList/>}
         >
-        <div className="space-x-4 flex flex-row flex-nowrap overflow-x-auto"
-             style={{width: `${sectionWidth}px`}}>
-            {sortedEvents.length !== 0 && sortedEvents.map((event, index) => (
-                <EventCard 
-                    key={event.id}
-                    event={event}
-                    index={index}
-                    className="min-w-[300px] md:min-w-[350px]"
-                    showOrganizer={false}>
-                    <div className={"flex flex-row items-center justify-center gap-2"}>
-                        <span>{``}</span>
-                    </div>
+        <div 
+            className="space-x-4 flex flex-row flex-nowrap overflow-x-auto"
+            style={{width: `${sectionWidth}px`}}>
+            {revSortedEvents.length !== 0 && revSortedEvents.map((event, index) => {
+               const summary = ticketSummaries[event.id];
+               const issued = summary ? summary.claimed : (event.ticket_capacity - event.remaining_tickets);
+               return (
+                  <EventCard 
+                     key={event.id}
+                     event={event}
+                     index={index}
+                     className="min-w-[300px] md:min-w-[350px]"
+                     showOrganizer={false}>
+                     <div className="flex flex-col gap-1 text-sm">
+                        <div className="flex justify-between">
+                           <span className="opacity-70">Issued</span>
+                           <span>{summariesLoading && !summary ? "…" : issued}</span>
+                        </div>
+                     </div>
                 </EventCard>
-                ))}
+               )
+            })}
             </div>
         </AnalyticsSection>
       </div>
