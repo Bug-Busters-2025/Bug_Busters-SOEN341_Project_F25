@@ -1,5 +1,5 @@
 import { useRef, useState, useEffect, useMemo } from "react";
-import { ClipboardList, User, Calendar, Users, TrendingUp } from "lucide-react";
+import { ClipboardList, Trash, Calendar, Users, TrendingUp, PenLine } from "lucide-react";
 import AnalyticsCard from "@/components/dashboard/organizer/AnalyticsCard";
 import AnalyticsSection from "@/components/dashboard/organizer/AnalyticsSection";
 import EventCard from "@/components/ui/EventCard";
@@ -9,6 +9,39 @@ import { type Event } from "@/data/events";
 import { useUserId } from "@/hooks/useUserId";
 import axios from "axios";
 
+
+const calculateCurrentMonthAttendees = (events: Event[]): [number, string] => { 
+    const now = new Date();
+    const currMonth = now.getMonth(); 
+    const currYear = now.getFullYear(); 
+    const prevMonthDate = new Date(now);
+
+    prevMonthDate.setMonth(now.getMonth() - 1); 
+    const prevMonth = prevMonthDate.getMonth(); 
+    const prevYear = prevMonthDate.getFullYear(); 
+
+    const isCurrentMonth = (date: Date): boolean => date.getMonth() === currMonth && date.getFullYear() === currYear; 
+    const isPreviousMonth = (date: Date): boolean => date.getMonth() === prevMonth && date.getFullYear() === prevYear; 
+
+    const currentMonthAttendees = events 
+        .filter(event => isCurrentMonth(new Date(event.event_date)))
+        .reduce((acc, curr) => acc + (curr.ticket_capacity - curr.remaining_tickets), 0);
+    
+    const prevMonthAttendees = events
+        .filter(event => isPreviousMonth(new Date(event.event_date)))
+        .reduce((acc, curr) => acc + (curr.ticket_capacity - curr.remaining_tickets), 0);
+    
+    let percentageChange = "N/A"; 
+    if (prevMonthAttendees > 0) { 
+        const diff = currentMonthAttendees - prevMonthAttendees;
+        const percent = (diff / prevMonthAttendees) * 100;
+        percentageChange = (percent >= 0 ? '+' : '') + percent.toFixed(1) + '%'; 
+    } else if (currentMonthAttendees > 0 && prevMonthAttendees === 0) { 
+        percentageChange = "+100%"; 
+    } 
+    return [currentMonthAttendees, percentageChange]; 
+}
+
 export default function OrganizerAnalytics() {
     const calendarRef = useRef<HTMLDivElement | null>(null);
     const { userId, loading: userLoading } = useUserId();
@@ -16,6 +49,9 @@ export default function OrganizerAnalytics() {
     const [loading, setLoading] = useState(true);
     const sectionRef = useRef<HTMLDivElement | null>(null)
     const [sectionWidth, setSectionWidth] = useState<number>(0);
+
+    const [currentMonthAttendees, setCurrentMonthAttendees] = useState<number>(0);
+    const [attendeesChange, setAttendeesChange] = useState<string>("N/A");
 
     useEffect(() => {
         const fetchData = async () => {
@@ -38,6 +74,12 @@ export default function OrganizerAnalytics() {
 
         fetchData();
     }, [userId]);
+
+    useEffect(() => {
+        const [att, attPct] = calculateCurrentMonthAttendees(myOrgEvents);
+        setCurrentMonthAttendees(att);
+        setAttendeesChange(attPct);
+    }, [myOrgEvents]);
 
     useEffect(() => {
         const sectionElement = sectionRef.current;
@@ -63,6 +105,8 @@ export default function OrganizerAnalytics() {
         return [...myOrgEvents].sort((a, b) => new Date(a.event_date as any).getTime() - new Date(b.event_date as any).getTime());
     }, [myOrgEvents]);
         
+    const trendFrom = (s: string): "up" | "down" | "neutral" =>
+        s.includes("+") ? "up" : s.includes("-") ? "down" : "neutral";
 
    return (
       <div
@@ -78,7 +122,7 @@ export default function OrganizerAnalytics() {
             </p>
          </div>
 
-         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+         <div className="flex flex-row justify-center gap-15">
             <AnalyticsCard
                title="Total Events"
                icon={
@@ -104,19 +148,10 @@ export default function OrganizerAnalytics() {
                icon={
                   <TrendingUp className="h-5 w-5 text-secondary-foreground" />
                }
-               analytic={7950}
-               trend="up"
+               analytic={currentMonthAttendees}
+               trend={trendFrom(attendeesChange)}
             >
-               <span className="text-green-500 font-semibold">+21%</span> from
-               last month
-            </AnalyticsCard>
-            <AnalyticsCard
-               title="Total Subscribers"
-               icon={<User className="h-5 w-5 text-secondary-foreground" />}
-               analytic={1000}
-               trend="up"
-            >
-               <span className="text-green-500 font-semibold">+2%</span> from
+               <span className="text-green-500 font-semibold">{attendeesChange}</span> from
                last month
             </AnalyticsCard>
          </div>
