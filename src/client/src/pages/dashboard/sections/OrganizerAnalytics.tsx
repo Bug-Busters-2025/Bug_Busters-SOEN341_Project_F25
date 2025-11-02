@@ -326,7 +326,9 @@ export default function OrganizerAnalytics() {
             {revSortedEvents.length !== 0 && revSortedEvents.map((event, index) => {
                const summary = ticketSummaries[event.id];
                const issued = summary ? summary.claimed : (event.ticket_capacity - event.remaining_tickets);
+               const checkedIn = summary?.checked_in ?? 0;
                const available = summary ? summary.remaining_tickets : event.remaining_tickets;
+               const attendanceRate = summary ? ((issued > 0) ? ((checkedIn / issued) * 100).toFixed(1) + "%" : "N/A") : "N/A";
                return (
                   <EventCard 
                      key={event.id}
@@ -342,6 +344,14 @@ export default function OrganizerAnalytics() {
                         <div className="flex justify-between">
                            <span className="opacity-70">Available</span>
                            <span>{summariesLoading && !summary ? "…" : available}</span>
+                        </div>
+                        <div className="flex justify-between">
+                           <span className="opacity-70">Checked-in</span>
+                           <span>{summariesLoading && !summary ? "…" : checkedIn}</span>
+                        </div>
+                        <div className="flex justify-between">
+                           <span className="opacity-70">Attendance Rate</span>
+                           <span>{summariesLoading && !summary ? "…" : attendanceRate}</span>
                         </div>
                      </div>
                 </EventCard>
