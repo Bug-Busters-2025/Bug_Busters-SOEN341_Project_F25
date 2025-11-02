@@ -42,6 +42,39 @@ const calculateCurrentMonthAttendees = (events: Event[]): [number, string] => {
     return [currentMonthAttendees, percentageChange]; 
 }
 
+const calculateAverageAttendees = (events: Event[]): [number, string] => { 
+    const now = new Date(); 
+    const currMonth = now.getMonth(); 
+    const currYear = now.getFullYear();
+    const prevMonthDate = new Date(now); 
+    
+    prevMonthDate.setMonth(now.getMonth() - 1); 
+    const prevMonth = prevMonthDate.getMonth(); 
+    const prevYear = prevMonthDate.getFullYear(); 
+    
+    const isTargetMonth = (date: Date, month: number, year: number): boolean => date.getMonth() === month && date.getFullYear() === year; 
+    const getMonthStats = (month: number, year: number) => { 
+        const monthEvents = events.filter(event => isTargetMonth(new Date(event.event_date), month, year) ); 
+        const totalAttendees = monthEvents.reduce((acc, curr) => acc + (curr.ticket_capacity - curr.remaining_tickets), 0); 
+        const eventCount = monthEvents.length; 
+        const average = eventCount > 0 ? totalAttendees / eventCount : 0; 
+        return { average, eventCount }; 
+    }; 
+
+    const currStats = getMonthStats(currMonth, currYear); 
+    const prevStats = getMonthStats(prevMonth, prevYear); 
+    const currentMonthAverage = parseFloat(currStats.average.toFixed(1)); 
+    const prevMonthAverage = prevStats.average; 
+    
+    let percentageChange = "N/A"; 
+    if (prevMonthAverage > 0) { 
+        const diff = currentMonthAverage - prevMonthAverage; 
+        const percent = (diff / prevMonthAverage) * 100; percentageChange = (percent >= 0 ? '+' : '') + percent.toFixed(1) + '%'; 
+    } else if (currentMonthAverage > 0 && prevMonthAverage === 0) { 
+        percentageChange = "+100%"; 
+    } return [currentMonthAverage, percentageChange]; 
+} 
+
 export default function OrganizerAnalytics() {
     const calendarRef = useRef<HTMLDivElement | null>(null);
     const { userId, loading: userLoading } = useUserId();
@@ -49,6 +82,9 @@ export default function OrganizerAnalytics() {
     const [loading, setLoading] = useState(true);
     const sectionRef = useRef<HTMLDivElement | null>(null)
     const [sectionWidth, setSectionWidth] = useState<number>(0);
+
+    const [currentMonthAverage, setCurrentMonthAverage] = useState<number>(0);
+    const [averageChange, setAverageChange] = useState<string>("N/A");
 
     const [currentMonthAttendees, setCurrentMonthAttendees] = useState<number>(0);
     const [attendeesChange, setAttendeesChange] = useState<string>("N/A");
@@ -76,7 +112,11 @@ export default function OrganizerAnalytics() {
     }, [userId]);
 
     useEffect(() => {
+        const [avg, avgPct] = calculateAverageAttendees(myOrgEvents);
         const [att, attPct] = calculateCurrentMonthAttendees(myOrgEvents);
+
+        setCurrentMonthAverage(avg);
+        setAverageChange(avgPct);
         setCurrentMonthAttendees(att);
         setAttendeesChange(attPct);
     }, [myOrgEvents]);
@@ -137,10 +177,10 @@ export default function OrganizerAnalytics() {
             <AnalyticsCard
                title="Avg Attendees/Event"
                icon={<Users className="h-5 w-5 text-secondary-foreground" />}
-               analytic={150}
-               trend="down"
+               analytic={currentMonthAverage}
+               trend={trendFrom(averageChange)}
             >
-               <span className="text-red-500 font-semibold">-1%</span> from last
+               <span className="text-red-500 font-semibold">{averageChange}</span> from last
                month
             </AnalyticsCard>
             <AnalyticsCard
