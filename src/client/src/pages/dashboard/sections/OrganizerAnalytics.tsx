@@ -75,6 +75,37 @@ const calculateAverageAttendees = (events: Event[]): [number, string] => {
     } return [currentMonthAverage, percentageChange]; 
 } 
 
+const calculateCurrentMonthEventCount = (events: Event[]): [number, string] => {
+
+    console.log(events.length)
+    const now = new Date(); 
+    const currMonth = now.getMonth(); 
+    const currYear = now.getFullYear(); 
+    const prevMonthDate = new Date(now);
+    
+    prevMonthDate.setMonth(now.getMonth() - 1); 
+    const prevMonth = prevMonthDate.getMonth();
+    const prevYear = prevMonthDate.getFullYear();
+
+    const isTargetMonth = (date: Date, month: number, year: number): boolean => date.getMonth() === month && date.getFullYear() === year; 
+    const currentMonthEventCount = events
+        .filter(event => isTargetMonth(new Date(event.event_date), currMonth, currYear) ).length; 
+    const previousMonthEventCount = events
+        .filter(event => isTargetMonth(new Date(event.event_date), prevMonth, prevYear) ).length; 
+    
+    console.log(currentMonthEventCount)
+    console.log(previousMonthEventCount)
+
+    let percentageChange = "N/A"; 
+    if (previousMonthEventCount > 0) { 
+        const diff = currentMonthEventCount - previousMonthEventCount; 
+        const percent = (diff / previousMonthEventCount) * 100; percentageChange = (percent >= 0 ? '+' : '') + percent.toFixed(1) + '%'; 
+    } else if (currentMonthEventCount > 0 && previousMonthEventCount === 0) { 
+        percentageChange = "+100%"; 
+    }
+    return [currentMonthEventCount, percentageChange]; 
+}
+
 export default function OrganizerAnalytics() {
     const calendarRef = useRef<HTMLDivElement | null>(null);
     const { userId, loading: userLoading } = useUserId();
@@ -82,6 +113,9 @@ export default function OrganizerAnalytics() {
     const [loading, setLoading] = useState(true);
     const sectionRef = useRef<HTMLDivElement | null>(null)
     const [sectionWidth, setSectionWidth] = useState<number>(0);
+
+    const [currentMonthEventCount, setCurrentMonthEventCount] = useState<number>(0);
+    const [countChange, setCountChange] = useState<string>("N/A");
 
     const [currentMonthAverage, setCurrentMonthAverage] = useState<number>(0);
     const [averageChange, setAverageChange] = useState<string>("N/A");
@@ -112,9 +146,12 @@ export default function OrganizerAnalytics() {
     }, [userId]);
 
     useEffect(() => {
+        const [count, countPct] = calculateCurrentMonthEventCount(myOrgEvents);
         const [avg, avgPct] = calculateAverageAttendees(myOrgEvents);
         const [att, attPct] = calculateCurrentMonthAttendees(myOrgEvents);
 
+        setCurrentMonthEventCount(count);
+        setCountChange(countPct);
         setCurrentMonthAverage(avg);
         setAverageChange(avgPct);
         setCurrentMonthAttendees(att);
@@ -141,7 +178,7 @@ export default function OrganizerAnalytics() {
     }, [sectionWidth]);
 
 
-    const revSortedEvents = useMemo(() => {
+    const sortedEvents = useMemo(() => {
         return [...myOrgEvents].sort((a, b) => new Date(a.event_date as any).getTime() - new Date(b.event_date as any).getTime());
     }, [myOrgEvents]);
         
@@ -168,10 +205,10 @@ export default function OrganizerAnalytics() {
                icon={
                   <ClipboardList className="h-5 w-5 text-secondary-foreground" />
                }
-               analytic={revSortedEvents.length}
-               trend="up"
+               analytic={currentMonthEventCount}
+               trend={trendFrom(countChange)}
             >
-               <span className="text-green-500 font-semibold">+12%</span> from
+               <span className="text-green-500 font-semibold">{countChange}</span> from
                last month
             </AnalyticsCard>
             <AnalyticsCard
@@ -233,8 +270,8 @@ export default function OrganizerAnalytics() {
                            <p className="text-center text-muted-foreground py-8">
                               Loading events...
                            </p>
-                        ) : revSortedEvents.length !== 0 ? (
-                            revSortedEvents.map((e) => (
+                        ) : sortedEvents.length !== 0 ? (
+                            sortedEvents.map((e) => (
                               <EventOverviewCard key={e.id} event={e} />
                            ))
                         ) : (
@@ -255,7 +292,7 @@ export default function OrganizerAnalytics() {
         >
         <div className="space-x-4 flex flex-row flex-nowrap overflow-x-auto"
              style={{width: `${sectionWidth}px`}}>
-            {revSortedEvents.length !== 0 && revSortedEvents.map((event, index) => (
+            {sortedEvents.length !== 0 && sortedEvents.map((event, index) => (
                 <EventCard 
                     key={event.id}
                     event={event}
