@@ -11,6 +11,9 @@ export default function ProtectedRoute({
    allowedRoles = [],
    children,
 }: ProtectedRouteProps) {
+   const authOff = import.meta.env.MODE !== "production" || import.meta.env.VITE_ENABLE_AUTH !== "1";
+   if (authOff) return <>{children}</>;
+
    const { isSignedIn, isLoaded } = useUser();
    const { role, loading } = useRole();
    const [redirecting, setRedirecting] = useState(false);
@@ -65,7 +68,7 @@ export default function ProtectedRoute({
       return (
          <div className="flex flex-col items-center justify-center min-h-screen text-center">
             <p className="text-lg font-semibold text-red-500">
-               🚫 You are not authorized to view this page.
+               You are not authorized to view this page.
             </p>
             <p className="text-sm text-gray-400 mt-2">
                Redirecting you to the home page...

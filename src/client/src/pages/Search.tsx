@@ -29,9 +29,11 @@ import type { EventWithOrganizer } from "@/types/event";
 import axios from "axios";
 import { useUserId } from "@/hooks/useUserId";
 import { Button } from "@/components/ui/button";
+import { useRole } from "@/hooks/useRole";
 
 export default function Search() {
    const { userId, loading: userLoading } = useUserId();
+   const { role } = useRole();
    const [selectedCategory, setSelectedCategory] = useState<string>("All");
    const [selectedOrganization, setSelectedOrganization] =
       useState<string>("All");
@@ -70,8 +72,11 @@ export default function Search() {
 
    const filteredEvents = useMemo(() => {
       let filtered = events.filter((event) => {
-         if (selectedDate && event.event_date !== selectedDate) {
-            return false;
+         if (selectedDate) {
+            const eventDateOnly = event.event_date.split("T")[0].split(" ")[0];
+            if (eventDateOnly !== selectedDate) {
+               return false;
+            }
          }
          if (
             selectedCategory !== "All" &&
@@ -499,33 +504,39 @@ export default function Search() {
                                  </p>
                               </div>
 
-                              {isRegistered ? (
-                                 <Button
-                                    variant="primary"
-                                    size="lg"
-                                    onClick={(e) => {
-                                       e.stopPropagation();
-                                       handleUnregisterEvent(event);
-                                    }}
-                                    className="w-full bg-green-600 text-white py-2.5 px-4 rounded-md hover:bg-green-700 transition-all duration-200 active:scale-[0.98] font-medium cursor-pointer"
-                                 >
-                                    Registered (Click to Unregister)
-                                 </Button>
-                              ) : (
-                                 <Button
-                                    onClick={(e) => {
-                                       e.stopPropagation();
-                                       handleRegisterEvent(event);
-                                    }}
-                                    variant="primary"
-                                    size="lg"
-                                    className="w-full bg-primary text-primary-foreground py-2.5 px-4 rounded-md hover:bg-primary/90 transition-all duration-200 active:scale-[0.98] font-medium cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
-                                    disabled={event.remaining_tickets <= 0}
-                                 >
-                                    {event.remaining_tickets > 0
-                                       ? "Register Now"
-                                       : "Event Full"}
-                                 </Button>
+                              {role === "student" && (
+                                 <>
+                                    {isRegistered ? (
+                                       <Button
+                                          variant="primary"
+                                          size="lg"
+                                          onClick={(e) => {
+                                             e.stopPropagation();
+                                             handleUnregisterEvent(event);
+                                          }}
+                                          className="w-full bg-green-600 text-white py-2.5 px-4 rounded-md hover:bg-green-700 transition-all duration-200 active:scale-[0.98] font-medium cursor-pointer"
+                                       >
+                                          Registered (Click to Unregister)
+                                       </Button>
+                                    ) : (
+                                       <Button
+                                          onClick={(e) => {
+                                             e.stopPropagation();
+                                             handleRegisterEvent(event);
+                                          }}
+                                          variant="primary"
+                                          size="lg"
+                                          className="w-full bg-primary text-primary-foreground py-2.5 px-4 rounded-md hover:bg-primary/90 transition-all duration-200 active:scale-[0.98] font-medium cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                                          disabled={
+                                             event.remaining_tickets <= 0
+                                          }
+                                       >
+                                          {event.remaining_tickets > 0
+                                             ? "Register Now"
+                                             : "Event Full"}
+                                       </Button>
+                                    )}
+                                 </>
                               )}
                            </CardContent>
                         </Card>

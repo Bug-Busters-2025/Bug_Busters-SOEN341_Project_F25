@@ -1,5 +1,5 @@
 import { NavLink } from "react-router";
-import { BarChart3, Calendar, Ticket } from "lucide-react";
+import { BarChart3, Calendar, Ticket, Users, Bell } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useRole } from "@/hooks/useRole";
 
@@ -18,9 +18,9 @@ export default function DashboardSidemenu() {
          label: "Analytics",
       },
       {
-         to: "./my-tickets",
-         icon: Ticket,
-         label: "My Tickets",
+         to: "./notifications",
+         icon: Bell,
+         label: "Notifications",
       },
    ];
 
@@ -33,7 +33,18 @@ export default function DashboardSidemenu() {
       },
    ];
 
-   const navItems = role === "student" ? studentNavItems : organizerNavItems;
+   const adminNavItems = [
+      { to: "./admin", icon: Users, label: "Manage Users" },
+      { to: "./admin-events", icon: Calendar, label: "Manage Events" },
+      { to: "./analytics", icon: BarChart3, label: "Analytics" },
+   ];
+
+   const navItems =
+      role === "student"
+         ? studentNavItems
+         : role === "admin"
+         ? adminNavItems
+         : organizerNavItems;
 
    const panelConfig = {
       student: {
@@ -46,7 +57,7 @@ export default function DashboardSidemenu() {
       },
       admin: {
          title: "Admin Dashboard",
-         description: "Manage your events and analytics",
+         description: "Manage users, events and analytics",
       },
    };
 

@@ -25,13 +25,18 @@ export function DatePicker({
    placeholder = "Pick a date",
    className,
 }: DatePickerProps) {
+   const parseLocalDate = (dateString: string): Date => {
+      const [year, month, day] = dateString.split("-").map(Number);
+      return new Date(year, month - 1, day);
+   };
+
    const [date, setDate] = React.useState<Date | undefined>(
-      value ? new Date(value) : undefined
+      value ? parseLocalDate(value) : undefined
    );
 
    React.useEffect(() => {
       if (value) {
-         setDate(new Date(value));
+         setDate(parseLocalDate(value));
       } else {
          setDate(undefined);
       }

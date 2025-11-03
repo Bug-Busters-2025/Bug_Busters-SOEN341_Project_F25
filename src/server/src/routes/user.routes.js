@@ -1,14 +1,107 @@
 const express = require("express");
 const db = require("../db.js");
+const { requireAuth, getAuth } = require("@clerk/express");
 
 const usersRouter = express.Router();
 
-// get list of users
-usersRouter.get("", (req, res) => {
-   db.query("SELECT * FROM users", (err, results) => {
-      if (err) return res.status(500).send("Database error");
-      res.json(results);
-   });
+function assertAdmin(req, res, next) {
+   const { userId } = getAuth(req);
+   if (!userId) return res.status(401).json({ message: "Unauthorized" });
+
+   db.query(
+      "SELECT role FROM users WHERE clerk_id = ?",
+      [userId],
+      (err, rows) => {
+         if (err) return res.status(500).json({ message: "Database error" });
+         if (rows.length === 0)
+            return res.status(404).json({ message: "User not found" });
+         if (rows[0].role !== "admin")
+            return res.status(403).json({ message: "Forbidden" });
+         next();
+      }
+   );
+}
+
+usersRouter.get("", requireAuth(), assertAdmin, (req, res) => {
+   db.query(
+      "SELECT id, name, email, role, created_at FROM users ORDER BY id ASC",
+      (err, results) => {
+         if (err) return res.status(500).send("Database error");
+         res.json(results);
+      }
+   );
+});
+
+usersRouter.put("/:userId/role", requireAuth(), assertAdmin, (req, res) => {
+   const targetUserId = Number(req.params.userId);
+   const { role } = req.body || {};
+
+   if (!Number.isFinite(targetUserId)) {
+      return res.status(400).json({ message: "Invalid userId" });
+   }
+   const allowedRoles = ["student", "organizer"];
+   if (!allowedRoles.includes(role)) {
+      return res
+         .status(400)
+         .json({ message: "Invalid role. Use student or organizer" });
+   }
+
+   db.query(
+      "SELECT role FROM users WHERE id = ?",
+      [targetUserId],
+      (err, rows) => {
+         if (err) return res.status(500).json({ message: "Database error" });
+         if (rows.length === 0)
+            return res.status(404).json({ message: "User not found" });
+         if (rows[0].role === "admin") {
+            return res
+               .status(403)
+               .json({ message: "Cannot change admin role" });
+         }
+
+         db.query(
+            "UPDATE users SET role = ? WHERE id = ?",
+            [role, targetUserId],
+            (err2, result) => {
+               if (err2)
+                  return res.status(500).json({ message: "Database error" });
+               return res.status(200).json({ ok: true });
+            }
+         );
+      }
+   );
+});
+
+usersRouter.delete("/:userId", requireAuth(), assertAdmin, (req, res) => {
+   const targetUserId = Number(req.params.userId);
+   if (!Number.isFinite(targetUserId)) {
+      return res.status(400).json({ message: "Invalid userId" });
+   }
+
+   db.query(
+      "SELECT role FROM users WHERE id = ?",
+      [targetUserId],
+      (err, rows) => {
+         if (err) return res.status(500).json({ message: "Database error" });
+         if (rows.length === 0)
+            return res.status(404).json({ message: "User not found" });
+         if (rows[0].role === "admin") {
+            return res
+               .status(403)
+               .json({ message: "Cannot delete admin user" });
+         }
+
+         db.query(
+            "DELETE FROM users WHERE id = ?",
+            [targetUserId],
+            (err2, result) => {
+               if (err2)
+                  return res.status(500).json({ message: "Database error" });
+               return res.status(200).json({ ok: true });
+            }
+         );
+      }
+   );
 });
 usersRouter.get("/tickets/:userId", async (req, res) => {
    const userId = Number(req.params.userId);

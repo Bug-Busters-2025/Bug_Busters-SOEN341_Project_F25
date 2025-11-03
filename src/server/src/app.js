@@ -1,29 +1,54 @@
-const express = require("express");
-const dotenv = require("dotenv");
-const path = require("node:path");
-const api = require("./routes");
-const notFound = require("./middleware/notFound");
-const errorHandler = require("./middleware/error");
-const cors = require("cors");
-const { clerkMiddleware, requireAuth, getAuth } = require("@clerk/express");
-
-dotenv.config({ path: path.resolve(__dirname, "../../../.env") });
-
-const app = express();
-app.use(cors({ origin: "http://localhost:5173", credentials: true }));
-app.use(express.json());
-
-app.use("/api/v1", api);
-app.use(clerkMiddleware());
-
-// public/protected samples
-app.get("/public", (_req, res) => res.json({ ok: true }));
-app.get("/protected", requireAuth(), (req, res) => {
-   const { userId } = getAuth(req);
-   res.json({ ok: true, userId });
+const path = require('path');
+require('dotenv').config({
+  path: path.resolve(__dirname, '..', '..', '..', '.env'),
+  override: true,
 });
 
-// 404 + error handlers last
+const express = require('express');
+const cors = require('cors');
+const { clerkMiddleware, requireAuth, getAuth } = require('@clerk/express');
+
+const api = require('./routes');
+const notFound = require('./middleware/notFound');
+const errorHandler = require('./middleware/error');
+
+const { ping, pool } = require('./db');
+
+const app = express();
+app.use(cors({ origin: 'http://localhost:5173', credentials: true }));
+app.use(express.json());
+
+app.get('/api/health/db', async (_req, res, next) => {
+  try { res.json({ ok: await ping() }); } catch (e) { next(e); }
+});
+
+app.get('/api/debug/events-count', async (_req, res, next) => {
+  try {
+    const [[{ c }]] = await pool.query('SELECT COUNT(*) c FROM events');
+    res.json({ events: Number(c) });
+  } catch (e) { next(e); }
+});
+
+app.get('/api/debug/events', async (_req, res, next) => {
+  try {
+    const [rows] = await pool.query('SELECT * FROM events LIMIT 50');
+    res.json(rows);
+  } catch (e) { next(e); }
+});
+
+const useAuth = process.env.ENABLE_AUTH === '1';
+if (useAuth) {
+  app.use(clerkMiddleware());
+}
+
+app.use('/api/v1', api);
+
+app.get('/public', (_req, res) => res.json({ ok: true }));
+app.get('/protected', useAuth ? requireAuth() : (_req, _res, next) => next(), (req, res) => {
+  const { userId } = useAuth ? getAuth(req) : { userId: 'dev-bypass' };
+  res.json({ ok: true, userId });
+});
+
 app.use(notFound);
 app.use(errorHandler);
 

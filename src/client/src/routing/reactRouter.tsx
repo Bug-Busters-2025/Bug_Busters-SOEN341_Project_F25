@@ -12,9 +12,13 @@ import DashboardLayout from "@/pages/dashboard/DashboardLayout";
 import DashboardRedirect from "@/pages/dashboard/DashboardRedirect";
 import OrganizerAnalytics from "@/pages/dashboard/sections/OrganizerAnalytics";
 import OrganizerEvents from "@/pages/dashboard/sections/OrganizerEvents";
+import OrganizerNotifications from "@/pages/dashboard/sections/OrganizerNotifications";
+import AdminManageUsers from "@/pages/dashboard/sections/AdminManageUsers";
+import AdminManageEvents from "@/pages/dashboard/sections/AdminManageEvents";
 import ProtectedRoute from "@/components/protectedRoutes";
 import MyTickets from "@/components/dashboard/users/MyTickets";
 import Home from "@/pages/Home";
+import ScanTicketPage from "@/pages/dashboard/sections/ScanTicketPage";
 
 const authAppearance = {
    baseTheme: dark,
@@ -39,14 +43,47 @@ const router = createBrowserRouter([
          {
             id: "dashboard",
             path: "dashboard",
-            Component: DashboardLayout,
-            Component: DashboardLayout,
+            element: (
+               <ProtectedRoute allowedRoles={["student", "organizer", "admin"]}>
+                 <DashboardLayout />
+               </ProtectedRoute>
+             ),
             children: [
                { index: true, Component: DashboardRedirect },
                {
                   id: "my-tickets",
                   path: "my-tickets",
-                  Component: MyTickets,
+                  element: (
+                     <ProtectedRoute allowedRoles={["student"]}>
+                       <MyTickets />
+                     </ProtectedRoute>
+                   ),
+               },
+               {
+                  path: "scan-ticket",
+                  element: (
+                     <ProtectedRoute allowedRoles={["organizer", "admin"]}>
+                       <ScanTicketPage />
+                     </ProtectedRoute>
+                   ),
+               },
+               {
+                  id: "admin-manage-users",
+                  path: "admin",
+                  element: (
+                     <ProtectedRoute allowedRoles={["admin"]}>
+                        <AdminManageUsers />
+                     </ProtectedRoute>
+                  ),
+               },
+               {
+                  id: "admin-manage-events",
+                  path: "admin-events",
+                  element: (
+                     <ProtectedRoute allowedRoles={["admin"]}>
+                        <AdminManageEvents />
+                     </ProtectedRoute>
+                  ),
                },
                {
                   id: "organizer-events",
@@ -63,6 +100,15 @@ const router = createBrowserRouter([
                   element: (
                      <ProtectedRoute allowedRoles={["organizer", "admin"]}>
                         <OrganizerAnalytics />
+                     </ProtectedRoute>
+                  ),
+               },
+               {
+                  id: "notifications",
+                  path: "notifications",
+                  element: (
+                     <ProtectedRoute allowedRoles={["organizer"]}>
+                        <OrganizerNotifications />
                      </ProtectedRoute>
                   ),
                },
