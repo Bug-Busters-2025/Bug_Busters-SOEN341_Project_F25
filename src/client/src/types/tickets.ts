@@ -75,3 +75,13 @@ export const toTicket = (r: ApiRow): Ticket => ({
    organizerName: r.organizer_name,
    organizerEmail: r.organizer_email,
 });
+
+export type TicketSummary = {
+   event_id: number;
+   ticket_capacity: number;
+   remaining_tickets: number;
+   total_rows: number;
+   claimed: number;
+   waitlisted: number;
+   checked_in: number;
+};

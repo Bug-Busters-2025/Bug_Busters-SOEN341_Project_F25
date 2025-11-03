@@ -21,7 +21,7 @@ function AnalyticsCard({
    return (
       <Card
          className={cn(
-            "relative overflow-hidden transition-all duration-300 hover:shadow-xl cursor-default bg-gradient-to-br from-card to-muted/20"
+            "relative overflow-hidden transition-all duration-300 hover:shadow-xl cursor-default bg-gradient-to-br from-card to-muted/20 w-[250px] max-w-[250px]"
          )}
          onClick={() => action}
       >

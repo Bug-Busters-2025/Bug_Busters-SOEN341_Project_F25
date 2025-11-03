@@ -12,6 +12,8 @@ import { formatDate } from "@/utils/dateTimeUtils";
 interface eventCardProps {
    event: Event;
    index: number;
+   className?: string;
+   showOrganizer?: boolean
    children: ReactNode;
 }
 
@@ -29,10 +31,10 @@ memo(function OrganizerOptions() {
    );
 });
 
-function EventCard({ event, index, children }: eventCardProps) {
+function EventCard({ event, index, children, showOrganizer = true, className = "" }: eventCardProps) {
    return (
       <Card
-         className="group hover:shadow-xl transition-all duration-300 cursor-pointer border-border/50 hover:border-border bg-card/50 backdrop-blur-sm overflow-hidden animate-in fade-in-0 slide-in-from-bottom-4"
+         className={`group hover:shadow-xl transition-all duration-300 cursor-pointer border-border/50 hover:border-border bg-card/50 backdrop-blur-sm overflow-hidden animate-in fade-in-0 slide-in-from-bottom-4 ${className}`}
          style={{ animationDelay: `${index * 50}ms` }}
       >
          <div className="relative h-48 overflow-hidden">
@@ -78,12 +80,12 @@ function EventCard({ event, index, children }: eventCardProps) {
                   </span>
                </div>
             </div>
-            <div className="mb-4 pt-2 border-t border-border/50">
+            {showOrganizer && <div className="mb-4 pt-2 border-t border-border/50">
                <p className="text-sm font-medium text-foreground">
                   Organized by:{" "}
                   <span className="text-primary">{event.organizer}</span>
                </p>
-            </div>
+            </div>}
             {children}
          </CardContent>
       </Card>
