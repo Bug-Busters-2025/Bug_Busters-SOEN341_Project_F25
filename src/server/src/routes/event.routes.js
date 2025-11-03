@@ -14,6 +14,7 @@ eventsRouter.get("/", (req, res) => {
           events.id, events.organizer_id, events.title, events.description, events.category,
           COALESCE(events.imageUrl, ?) AS imageUrl,
           events.event_date, events.location, events.ticket_capacity, events.remaining_tickets, events.ticket_type,
+          events.status,
           users.name AS organizer_name, 
           users.email AS organizer_email
         FROM events
@@ -229,8 +230,8 @@ eventsRouter.post("/create", requireAuth(), (req, res) => {
 
       const insertSQL = `
         INSERT INTO events 
-        (organizer_id, title, description, category, imageUrl, event_date, location, ticket_capacity, remaining_tickets, ticket_type)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        (organizer_id, title, description, category, imageUrl, event_date, location, ticket_capacity, remaining_tickets, ticket_type, status)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'PUBLISHED')
       `;
       db.query(
          insertSQL,
