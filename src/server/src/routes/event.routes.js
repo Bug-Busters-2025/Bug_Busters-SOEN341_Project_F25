@@ -5,7 +5,7 @@ const db = require("../db.js");
 const { format } = require("@fast-csv/format");
 const QRCode = require("qrcode");
 
-// get list of events
+// get list of events (only PUBLISHED for public view)
 eventsRouter.get("/", (req, res) => {
    const sql = `
         SELECT 
@@ -14,6 +14,45 @@ eventsRouter.get("/", (req, res) => {
         users.email AS organizer_email
         FROM events
         JOIN users ON events.organizer_id = users.id
+        WHERE events.status = 'PUBLISHED'
+    `;
+   db.query(sql, (err, results) => {
+      if (err) {
+         console.error("Database error in GET /events:", err);
+         return res.status(500).json({ message: "Database error", error: err.message });
+      }
+      res.status(200).json(results);
+   });
+});
+
+// Admin: get all events (including REMOVED)
+function assertAdmin(req, res, next) {
+   const { userId } = getAuth(req);
+   if (!userId) return res.status(401).json({ message: "Unauthorized" });
+
+   db.query(
+      "SELECT role FROM users WHERE clerk_id = ?",
+      [userId],
+      (err, rows) => {
+         if (err) return res.status(500).json({ message: "Database error" });
+         if (rows.length === 0)
+            return res.status(404).json({ message: "User not found" });
+         if (rows[0].role !== "admin")
+            return res.status(403).json({ message: "Forbidden" });
+         next();
+      }
+   );
+}
+
+eventsRouter.get("/admin/all", requireAuth(), assertAdmin, (req, res) => {
+   const sql = `
+        SELECT 
+        events.*, 
+        users.name AS organizer_name, 
+        users.email AS organizer_email
+        FROM events
+        JOIN users ON events.organizer_id = users.id
+        ORDER BY events.created_at DESC
     `;
    db.query(sql, (err, results) => {
       if (err) return res.status(500).send("Database error");
@@ -21,7 +60,60 @@ eventsRouter.get("/", (req, res) => {
    });
 });
 
-//
+// Admin: update event status (remove event by setting to DELETED)
+eventsRouter.patch("/:event_id/status", requireAuth(), assertAdmin, (req, res) => {
+   const { event_id } = req.params;
+   const { status } = req.body;
+
+   if (!event_id || !status) {
+      return res.status(400).json({ message: "Event ID and status are required" });
+   }
+
+   const allowedStatuses = ["PUBLISHED", "DELETED"];
+   if (!allowedStatuses.includes(status)) {
+      return res.status(400).json({ message: "Invalid status. Use PUBLISHED or DELETED" });
+   }
+
+   // First, get the event details to notify the organizer
+   db.query("SELECT organizer_id, title FROM events WHERE id = ?", [event_id], (err, eventData) => {
+      if (err) {
+         console.error("Database error fetching event:", err);
+         return res.status(500).json({ message: "Database error" });
+      }
+      if (eventData.length === 0) {
+         return res.status(404).json({ message: "Event not found" });
+      }
+
+      const organizerId = eventData[0].organizer_id;
+      const eventTitle = eventData[0].title;
+
+      const sql = `UPDATE events SET status = ? WHERE id = ?`;
+      db.query(sql, [status, event_id], (err, results) => {
+         if (err) {
+            console.error("Database error updating event status:", err);
+            return res.status(500).json({ message: "Database error" });
+         }
+         if (results.affectedRows === 0) {
+            return res.status(404).json({ message: "Event not found" });
+         }
+
+         // If status is DELETED, create a notification for the organizer
+         if (status === "DELETED") {
+            const notificationSql = `INSERT INTO notification (user_id, event_id) VALUES (?, ?)`;
+            db.query(notificationSql, [organizerId, event_id], (notifErr) => {
+               if (notifErr) {
+                  console.error("Error creating notification:", notifErr);
+                  // Don't fail the request if notification fails
+               }
+            });
+         }
+
+         res.status(200).json({ message: "Event status updated successfully", ok: true });
+      });
+   });
+});
+
+// get events by organizer
 eventsRouter.get("/organizer/:organizer_id", (req, res) => {
    const { organizer_id } = req.params;
    if (!organizer_id) {
