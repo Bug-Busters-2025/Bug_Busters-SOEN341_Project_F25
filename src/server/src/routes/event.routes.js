@@ -5,6 +5,8 @@ const db = require("../db.js");
 const { format } = require("@fast-csv/format");
 const QRCode = require("qrcode");
 
+const DEFAULT_EVENT_IMAGE = "";
+
 // get list of events (only PUBLISHED for public view)
 eventsRouter.get("/", (req, res) => {
    const sql = `
@@ -18,7 +20,7 @@ eventsRouter.get("/", (req, res) => {
         JOIN users ON events.organizer_id = users.id
         WHERE events.status = 'PUBLISHED'
     `;
-   db.query(sql, (err, results) => {
+   db.query(sql, [DEFAULT_EVENT_IMAGE], (err, results) => {
       if (err) {
          console.error("Database error in GET /events:", err);
          return res
@@ -58,7 +60,7 @@ eventsRouter.get("/admin/all", requireAuth(), assertAdmin, (req, res) => {
         JOIN users ON events.organizer_id = users.id
         ORDER BY events.created_at DESC
     `;
-   db.query(sql, [DEFAULT_EVENT_IMAGE], (err, results) => {
+   db.query(sql, [], (err, results) => {
       if (err) return res.status(500).send("Database error");
       res.status(200).json(results);
    });
