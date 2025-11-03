@@ -1,226 +1,106 @@
 import { useRef, useState, useEffect, useMemo } from "react";
-import { ClipboardList, Calendar, Users, TrendingUp } from "lucide-react";
+import {
+   ClipboardList,
+   Calendar,
+   Users,
+   User,
+   TrendingUp,
+   Ticket,
+} from "lucide-react";
 import AnalyticsCard from "@/components/dashboard/organizer/AnalyticsCard";
 import AnalyticsSection from "@/components/dashboard/organizer/AnalyticsSection";
 import EventCard from "@/components/ui/EventCard";
 import EventOverviewCard from "@/components/ui/EventOverviewCard";
 import CalendarUi from "@/components/CalendarUi";
 import { type Event } from "@/data/events";
-import { type TicketSummary } from "@/types/tickets";
-import { useUserId } from "@/hooks/useUserId";
-import axios, { type AxiosResponse } from "axios";
+import axios from "axios";
+import { useRole } from "@/hooks/useRole";
 
+type Summary = {
+   events: number;
+   tickets: number;
+   participationRate: number;
+};
 
-const calculateCurrentMonthAttendees = (events: Event[]): [number, string] => { 
-    const now = new Date();
-    const currMonth = now.getMonth(); 
-    const currYear = now.getFullYear(); 
-    const prevMonthDate = new Date(now);
-
-    prevMonthDate.setMonth(now.getMonth() - 1); 
-    const prevMonth = prevMonthDate.getMonth(); 
-    const prevYear = prevMonthDate.getFullYear(); 
-
-    const isCurrentMonth = (date: Date): boolean => date.getMonth() === currMonth && date.getFullYear() === currYear; 
-    const isPreviousMonth = (date: Date): boolean => date.getMonth() === prevMonth && date.getFullYear() === prevYear; 
-
-    const currentMonthAttendees = events 
-        .filter(event => isCurrentMonth(new Date(event.event_date)))
-        .reduce((acc, curr) => acc + (curr.ticket_capacity - curr.remaining_tickets), 0);
-    
-    const prevMonthAttendees = events
-        .filter(event => isPreviousMonth(new Date(event.event_date)))
-        .reduce((acc, curr) => acc + (curr.ticket_capacity - curr.remaining_tickets), 0);
-    
-    let percentageChange = "N/A"; 
-    if (prevMonthAttendees > 0) { 
-        const diff = currentMonthAttendees - prevMonthAttendees;
-        const percent = (diff / prevMonthAttendees) * 100;
-        percentageChange = (percent >= 0 ? '+' : '') + percent.toFixed(1) + '%'; 
-    } else if (currentMonthAttendees > 0 && prevMonthAttendees === 0) { 
-        percentageChange = "+100%"; 
-    } 
-    return [currentMonthAttendees, percentageChange]; 
-}
-
-const calculateAverageAttendees = (events: Event[]): [number, string] => { 
-    const now = new Date(); 
-    const currMonth = now.getMonth(); 
-    const currYear = now.getFullYear();
-    const prevMonthDate = new Date(now); 
-    
-    prevMonthDate.setMonth(now.getMonth() - 1); 
-    const prevMonth = prevMonthDate.getMonth(); 
-    const prevYear = prevMonthDate.getFullYear(); 
-    
-    const isTargetMonth = (date: Date, month: number, year: number): boolean => date.getMonth() === month && date.getFullYear() === year; 
-    const getMonthStats = (month: number, year: number) => { 
-        const monthEvents = events.filter(event => isTargetMonth(new Date(event.event_date), month, year) ); 
-        const totalAttendees = monthEvents.reduce((acc, curr) => acc + (curr.ticket_capacity - curr.remaining_tickets), 0); 
-        const eventCount = monthEvents.length; 
-        const average = eventCount > 0 ? totalAttendees / eventCount : 0; 
-        return { average, eventCount }; 
-    }; 
-
-    const currStats = getMonthStats(currMonth, currYear); 
-    const prevStats = getMonthStats(prevMonth, prevYear); 
-    const currentMonthAverage = parseFloat(currStats.average.toFixed(1)); 
-    const prevMonthAverage = prevStats.average; 
-    
-    let percentageChange = "N/A"; 
-    if (prevMonthAverage > 0) { 
-        const diff = currentMonthAverage - prevMonthAverage; 
-        const percent = (diff / prevMonthAverage) * 100; percentageChange = (percent >= 0 ? '+' : '') + percent.toFixed(1) + '%'; 
-    } else if (currentMonthAverage > 0 && prevMonthAverage === 0) { 
-        percentageChange = "+100%"; 
-    } return [currentMonthAverage, percentageChange]; 
-} 
-
-const calculateCurrentMonthEventCount = (events: Event[]): [number, string] => {
-
-    console.log(events.length)
-    const now = new Date(); 
-    const currMonth = now.getMonth(); 
-    const currYear = now.getFullYear(); 
-    const prevMonthDate = new Date(now);
-    
-    prevMonthDate.setMonth(now.getMonth() - 1); 
-    const prevMonth = prevMonthDate.getMonth();
-    const prevYear = prevMonthDate.getFullYear();
-
-    const isTargetMonth = (date: Date, month: number, year: number): boolean => date.getMonth() === month && date.getFullYear() === year; 
-    const currentMonthEventCount = events
-        .filter(event => isTargetMonth(new Date(event.event_date), currMonth, currYear) ).length; 
-    const previousMonthEventCount = events
-        .filter(event => isTargetMonth(new Date(event.event_date), prevMonth, prevYear) ).length; 
-    
-    console.log(currentMonthEventCount)
-    console.log(previousMonthEventCount)
-
-    let percentageChange = "N/A"; 
-    if (previousMonthEventCount > 0) { 
-        const diff = currentMonthEventCount - previousMonthEventCount; 
-        const percent = (diff / previousMonthEventCount) * 100; percentageChange = (percent >= 0 ? '+' : '') + percent.toFixed(1) + '%'; 
-    } else if (currentMonthEventCount > 0 && previousMonthEventCount === 0) { 
-        percentageChange = "+100%"; 
-    }
-    return [currentMonthEventCount, percentageChange]; 
-}
+type ParticipationPoint = {
+   date: string;
+   eventTitle: string;
+   issued: number;
+   checkedIn: number;
+};
 
 export default function OrganizerAnalytics() {
    const calendarRef = useRef<HTMLDivElement | null>(null);
-   const { userId, loading: userLoading } = useUserId();
-   const [myOrgEvents, setMyOrgEvents] = useState<Event[]>([]);
+   const [events, setEvents] = useState<Event[]>([]);
    const [loading, setLoading] = useState(true);
-   const sectionRef = useRef<HTMLDivElement | null>(null)
-   const [sectionWidth, setSectionWidth] = useState<number>(0);
 
-   const [currentMonthEventCount, setCurrentMonthEventCount] = useState<number>(0);
-   const [countChange, setCountChange] = useState<string>("N/A");
+   const [summary, setSummary] = useState<Summary | null>(null);
+   const [trend, setTrend] = useState<ParticipationPoint[]>([]);
+   const [loadingStats, setLoadingStats] = useState(true);
 
-   const [currentMonthAverage, setCurrentMonthAverage] = useState<number>(0);
-   const [averageChange, setAverageChange] = useState<string>("N/A");
-
-   const [currentMonthAttendees, setCurrentMonthAttendees] = useState<number>(0);
-   const [attendeesChange, setAttendeesChange] = useState<string>("N/A");
-
-   const [ticketSummaries, setTicketSummaries] = useState<Record<string, TicketSummary>>({});
-   const [summariesLoading, setSummariesLoading] = useState<boolean>(false);
+   const { role } = useRole();
 
    useEffect(() => {
-      const fetchData = async () => {
-         if (!userId) return;
-
+      const fetchAll = async () => {
          try {
-            const [myOrgEvensRes] = await Promise.all([
-               axios.get(`http://localhost:3000/api/v1/events/organizer/${userId}`),
+            setLoading(true);
+            setLoadingStats(true);
+
+            const [eventsRes, summaryRes, trendRes] = await Promise.all([
+               axios.get("http://localhost:3000/api/v1/events"),
+               axios.get("http://localhost:3000/api/v1/analytics/summary"),
+               axios.get(
+                  "http://localhost:3000/api/v1/analytics/participation"
+               ),
             ]);
-            setMyOrgEvents(myOrgEvensRes.data);
-         } catch (error) {
-            console.error("Error fetching data:", error);
-         } finally {
-            setLoading(false)
-         }
-      };
 
-      fetchData();
-   }, [userId]);
-
-   useEffect(() => {
-      const [count, countPct] = calculateCurrentMonthEventCount(myOrgEvents);
-      const [avg, avgPct] = calculateAverageAttendees(myOrgEvents);
-      const [att, attPct] = calculateCurrentMonthAttendees(myOrgEvents);
-
-      setCurrentMonthEventCount(count);
-      setCountChange(countPct);
-      setCurrentMonthAverage(avg);
-      setAverageChange(avgPct);
-      setCurrentMonthAttendees(att);
-      setAttendeesChange(attPct);
-   }, [myOrgEvents]);
-
-   useEffect(() => {
-      const sectionElement = sectionRef.current;
-      if (!sectionElement) return;
-
-      const observer = new ResizeObserver(entries => {
-         const newWidth = entries[0].contentRect.width;
-         if (newWidth !== sectionWidth) {
-               setSectionWidth(newWidth);
-         }
-      });
-
-      observer.observe(sectionElement);
-      return () => {
-         observer.unobserve(sectionElement);
-      };
-   }, [sectionWidth]);
-
-   useEffect((): (() => void) => {
-      if (!myOrgEvents || myOrgEvents.length === 0) {
-         setTicketSummaries({});
-         return () => {};
-      }
-
-      let cancelled = false;
-      const fetchSummaries = async (): Promise<void> => {
-         try {
-            setSummariesLoading(true);
-
-            const requests: Promise<readonly [string, TicketSummary | undefined]>[] = myOrgEvents.map(
-               (ev): Promise<readonly [string, TicketSummary | undefined]> =>
-               axios.get<unknown, AxiosResponse<TicketSummary>>(
-                  `http://localhost:3000/api/v1/events/${ev.id}/tickets/summary`
-               )
-               .then((r): readonly [string, TicketSummary] => [ev.id, r.data])
-               .catch((): readonly [string, undefined] => [ev.id, undefined])
+            const transformedEvents: Event[] = eventsRes.data.map(
+               (event: any) => ({
+                  id: event.id.toString(),
+                  title: event.title,
+                  description: event.description,
+                  event_date: (event.event_date || "").toString().split(" ")[0],
+                  location: event.location,
+                  category: event.category,
+                  organizer: event.organizer_name || "Unknown",
+                  imageUrl:
+                     event.imageUrl ||
+                     "https://images.unsplash.com/photo-1503676260728-1c00da094a0b?w=1200&h=630&fit=crop",
+                  ticket_type: event.ticket_type,
+                  ticket_capacity: event.ticket_capacity,
+                  remaining_tickets: event.remaining_tickets,
+               })
             );
 
-            const pairs: Array<readonly [string, TicketSummary | undefined]> = await Promise.all(requests);
-            if (cancelled) return;
-
-            const dict: Record<string, TicketSummary> = {};
-            for (const [id, data] of pairs) {
-               if (data) dict[id] = data;
-            }
-            setTicketSummaries(dict);
+            setEvents(transformedEvents);
+            setSummary(summaryRes.data as Summary);
+            setTrend(trendRes.data as ParticipationPoint[]);
+         } catch {
+            setEvents([]);
+            setSummary({ events: 0, tickets: 0, participationRate: 0 });
+            setTrend([]);
          } finally {
-            if (!cancelled) setSummariesLoading(false);
+            setLoading(false);
+            setLoadingStats(false);
          }
       };
 
-      void fetchSummaries();
-      return () => {
-         cancelled = true;
-      };
-   }, [myOrgEvents]);
+      fetchAll();
+   }, []);
 
-   const revSortedEvents = useMemo(() => {
-      return [...myOrgEvents].sort((a, b) => new Date(b.event_date as any).getTime() - new Date(a.event_date as any).getTime());
-   }, [myOrgEvents]);
-      
-   const trendFrom = (s: string): "up" | "down" | "neutral" =>
-      s.includes("+") ? "up" : s.includes("-") ? "down" : "neutral";
+   const totals = useMemo(() => {
+      const totalIssued = trend.reduce((a, b) => a + (b.issued || 0), 0);
+      const totalCheckedIn = trend.reduce((a, b) => a + (b.checkedIn || 0), 0);
+      const eventCount = summary?.events ?? 0;
+      const avgPerEvent =
+         eventCount > 0 ? Math.round(totalCheckedIn / eventCount) : 0;
+      return { totalIssued, totalCheckedIn, avgPerEvent };
+   }, [trend, summary]);
+
+   const participationPct = useMemo(
+      () => ((summary?.participationRate ?? 0) * 100).toFixed(2),
+      [summary]
+   );
 
    return (
       <div
@@ -236,39 +116,133 @@ export default function OrganizerAnalytics() {
             </p>
          </div>
 
-         <div className="flex flex-row justify-center gap-15">
+         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             <AnalyticsCard
                title="Total Events"
-               icon={<ClipboardList className="h-5 w-5 text-secondary-foreground"/>}
-               analytic={currentMonthEventCount}
-               trend={trendFrom(countChange)}
+               icon={
+                  <ClipboardList className="h-5 w-5 text-secondary-foreground" />
+               }
+               analytic={loadingStats ? 0 : summary?.events ?? 0}
+               trend="up"
             >
-               <span className="text-green-500 font-semibold">{countChange}</span> from last month
+               <span className="text-green-500 font-semibold">+12%</span> from
+               last month
             </AnalyticsCard>
+
             <AnalyticsCard
                title="Avg Attendees/Event"
                icon={<Users className="h-5 w-5 text-secondary-foreground" />}
-               analytic={currentMonthAverage}
-               trend={trendFrom(averageChange)}
+               analytic={loadingStats ? 0 : totals.avgPerEvent}
+               trend="neutral"
             >
-               <span className="text-red-500 font-semibold">{averageChange}</span> from last month
+               est. based on check-ins
             </AnalyticsCard>
+
             <AnalyticsCard
-               title="Total Attendees"
-               icon={<TrendingUp className="h-5 w-5 text-secondary-foreground"/>}
-               analytic={currentMonthAttendees}
-               trend={trendFrom(attendeesChange)}
+               title="Total Attendees (est.)"
+               icon={
+                  <TrendingUp className="h-5 w-5 text-secondary-foreground" />
+               }
+               analytic={loadingStats ? 0 : totals.totalCheckedIn}
+               trend="up"
             >
-               <span className="text-green-500 font-semibold">{attendeesChange}</span> from last month
+               {participationPct}% participation
+            </AnalyticsCard>
+
+            <AnalyticsCard
+               title="Total Tickets Issued"
+               icon={<Ticket className="h-5 w-5 text-secondary-foreground" />}
+               analytic={
+                  loadingStats ? 0 : summary?.tickets ?? totals.totalIssued
+               }
+               trend="neutral"
+            >
+               all statuses
             </AnalyticsCard>
          </div>
+
+         <AnalyticsSection
+            title="Participation Trend"
+            subtitle="Your daily tickets vs. check-ins by event"
+            sectionId="participation-trend"
+            icon={<TrendingUp className="h-6 w-6" />}
+         >
+            <div className="rounded-lg border border-border/50 bg-card/50 backdrop-blur-sm overflow-x-auto">
+               <table className="w-full text-sm">
+                  <thead className="text-muted-foreground">
+                     <tr className="border-b border-border/50">
+                        <th className="text-left p-3">Date</th>
+                        <th className="text-left p-3">Event</th>
+                        <th className="text-right p-3">Tickets</th>
+                        <th className="text-right p-3">Checked-in</th>
+                        <th className="text-right p-3">%</th>
+                     </tr>
+                  </thead>
+                  <tbody>
+                     {loadingStats && (
+                        <tr>
+                           <td className="p-3" colSpan={5}>
+                              Loading…
+                           </td>
+                        </tr>
+                     )}
+                     {!loadingStats && trend.length === 0 && (
+                        <tr>
+                           <td
+                              className="p-3 text-muted-foreground"
+                              colSpan={5}
+                           >
+                              No data yet
+                           </td>
+                        </tr>
+                     )}
+                     {!loadingStats &&
+                        trend.map((d, i) => {
+                           const pct =
+                              d.issued > 0
+                                 ? Math.round((d.checkedIn / d.issued) * 100)
+                                 : 0;
+                           return (
+                              <tr
+                                 key={`${d.date}-${d.eventTitle}-${i}`}
+                                 className="border-t border-border/30"
+                              >
+                                 <td className="p-3">
+                                    {new Date(d.date).toLocaleDateString(
+                                       undefined,
+                                       {
+                                          year: "numeric",
+                                          month: "short",
+                                          day: "2-digit",
+                                       }
+                                    )}
+                                 </td>
+                                 <td className="p-3">
+                                    <span className="inline-flex items-center gap-2">
+                                       <span className="h-2 w-2 rounded-full bg-primary/70" />
+                                       {d.eventTitle}
+                                    </span>
+                                 </td>
+                                 <td className="p-3 text-right">{d.issued}</td>
+                                 <td className="p-3 text-right">
+                                    {d.checkedIn}
+                                 </td>
+                                 <td className="p-3 text-right">{pct}%</td>
+                              </tr>
+                           );
+                        })}
+                  </tbody>
+               </table>
+            </div>
+         </AnalyticsSection>
+
          <AnalyticsSection
             title="Upcoming Events"
             subtitle="Your scheduled events for the next 30 days"
             sectionId="upcoming-events"
             icon={<Calendar className="h-6 w-6" />}
          >
-            <div ref={sectionRef} className="flex flex-col lg:flex-row w-full gap-6">
+            <div className="flex flex-col lg:flex-row w-full gap-6">
                <div className="w-full lg:w-2/3">
                   <div className="rounded-lg border border-border/50 p-4 bg-card/50 backdrop-blur-sm">
                      {loading ? (
@@ -278,7 +252,7 @@ export default function OrganizerAnalytics() {
                            </p>
                         </div>
                      ) : (
-                        <CalendarUi ref={calendarRef} events={myOrgEvents} />
+                        <CalendarUi ref={calendarRef} events={events} />
                      )}
                   </div>
                </div>
@@ -300,8 +274,8 @@ export default function OrganizerAnalytics() {
                            <p className="text-center text-muted-foreground py-8">
                               Loading events...
                            </p>
-                        ) : revSortedEvents.length !== 0 ? (
-                            revSortedEvents.map((e) => (
+                        ) : events.length !== 0 ? (
+                           events.map((e) => (
                               <EventOverviewCard key={e.id} event={e} />
                            ))
                         ) : (
@@ -314,51 +288,21 @@ export default function OrganizerAnalytics() {
                </div>
             </div>
          </AnalyticsSection>
-         <AnalyticsSection
-            title="My Events"
-            subtitle="Manage your events"
-            sectionId="my-events"
-            icon={<ClipboardList/>}
-        >
-        <div 
-            className="space-x-4 flex flex-row flex-nowrap overflow-x-auto"
-            style={{width: `${sectionWidth}px`}}>
-            {revSortedEvents.length !== 0 && revSortedEvents.map((event, index) => {
-               const summary = ticketSummaries[event.id];
-               const issued = summary ? summary.claimed : (event.ticket_capacity - event.remaining_tickets);
-               const checkedIn = summary?.checked_in ?? 0;
-               const available = summary ? summary.remaining_tickets : event.remaining_tickets;
-               const attendanceRate = summary ? ((issued > 0) ? ((checkedIn / issued) * 100).toFixed(1) + "%" : "N/A") : "N/A";
-               return (
-                  <EventCard 
-                     key={event.id}
-                     event={event}
-                     index={index}
-                     className="min-w-[300px] md:min-w-[350px]"
-                     showOrganizer={false}>
-                     <div className="flex flex-col gap-1 text-sm">
-                        <div className="flex justify-between">
-                           <span className="opacity-70">Issued</span>
-                           <span>{summariesLoading && !summary ? "…" : issued}</span>
-                        </div>
-                        <div className="flex justify-between">
-                           <span className="opacity-70">Available</span>
-                           <span>{summariesLoading && !summary ? "…" : available}</span>
-                        </div>
-                        <div className="flex justify-between">
-                           <span className="opacity-70">Checked-in</span>
-                           <span>{summariesLoading && !summary ? "…" : checkedIn}</span>
-                        </div>
-                        <div className="flex justify-between">
-                           <span className="opacity-70">Attendance Rate</span>
-                           <span>{summariesLoading && !summary ? "…" : attendanceRate}</span>
-                        </div>
-                     </div>
-                </EventCard>
-               )
-            })}
-            </div>
-        </AnalyticsSection>
+
+         {role === "organizer" && (
+            <AnalyticsSection
+               title="My Subscribers"
+               subtitle="View your subscriber list"
+               sectionId="my-subscibers"
+               icon={<User className="h-6 w-6" />}
+            >
+               <div className="rounded-lg border border-border/50 p-8 bg-card/50 backdrop-blur-sm text-center">
+                  <p className="text-muted-foreground">
+                     Subscriber management coming soon...
+                  </p>
+               </div>
+            </AnalyticsSection>
+         )}
       </div>
    );
 }

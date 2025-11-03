@@ -5,8 +5,53 @@ const db = require("../db.js");
 const { format } = require("@fast-csv/format");
 const QRCode = require("qrcode");
 
-// get list of events
+const DEFAULT_EVENT_IMAGE = "";
+
+// get list of events (only PUBLISHED for public view)
 eventsRouter.get("/", (req, res) => {
+   const sql = `
+        SELECT 
+          events.id, events.organizer_id, events.title, events.description, events.category,
+          COALESCE(events.imageUrl, ?) AS imageUrl,
+          events.event_date, events.location, events.ticket_capacity, events.remaining_tickets, events.ticket_type,
+          events.status,
+          users.name AS organizer_name, 
+          users.email AS organizer_email
+        FROM events
+        JOIN users ON events.organizer_id = users.id
+        WHERE events.status = 'PUBLISHED'
+    `;
+   db.query(sql, [DEFAULT_EVENT_IMAGE], (err, results) => {
+      if (err) {
+         console.error("Database error in GET /events:", err);
+         return res
+            .status(500)
+            .json({ message: "Database error", error: err.message });
+      }
+      res.status(200).json(results);
+   });
+});
+
+// Admin: get all events (including REMOVED)
+function assertAdmin(req, res, next) {
+   const { userId } = getAuth(req);
+   if (!userId) return res.status(401).json({ message: "Unauthorized" });
+
+   db.query(
+      "SELECT role FROM users WHERE clerk_id = ?",
+      [userId],
+      (err, rows) => {
+         if (err) return res.status(500).json({ message: "Database error" });
+         if (rows.length === 0)
+            return res.status(404).json({ message: "User not found" });
+         if (rows[0].role !== "admin")
+            return res.status(403).json({ message: "Forbidden" });
+         next();
+      }
+   );
+}
+
+eventsRouter.get("/admin/all", requireAuth(), assertAdmin, (req, res) => {
    const sql = `
         SELECT 
         events.*, 
@@ -14,28 +59,111 @@ eventsRouter.get("/", (req, res) => {
         users.email AS organizer_email
         FROM events
         JOIN users ON events.organizer_id = users.id
+        ORDER BY events.created_at DESC
     `;
-   db.query(sql, (err, results) => {
+   db.query(sql, [], (err, results) => {
       if (err) return res.status(500).send("Database error");
       res.status(200).json(results);
    });
 });
 
-//
+// Admin: update event status (remove event by setting to DELETED)
+eventsRouter.patch(
+   "/:event_id/status",
+   requireAuth(),
+   assertAdmin,
+   (req, res) => {
+      const { event_id } = req.params;
+      const { status } = req.body;
+
+      if (!event_id || !status) {
+         return res
+            .status(400)
+            .json({ message: "Event ID and status are required" });
+      }
+
+      const allowedStatuses = ["PUBLISHED", "DELETED"];
+      if (!allowedStatuses.includes(status)) {
+         return res
+            .status(400)
+            .json({ message: "Invalid status. Use PUBLISHED or DELETED" });
+      }
+
+      // First, get the event details to notify the organizer
+      db.query(
+         "SELECT organizer_id, title FROM events WHERE id = ?",
+         [event_id],
+         (err, eventData) => {
+            if (err) {
+               console.error("Database error fetching event:", err);
+               return res.status(500).json({ message: "Database error" });
+            }
+            if (eventData.length === 0) {
+               return res.status(404).json({ message: "Event not found" });
+            }
+
+            const organizerId = eventData[0].organizer_id;
+            const eventTitle = eventData[0].title;
+
+            const sql = `UPDATE events SET status = ? WHERE id = ?`;
+            db.query(sql, [status, event_id], (err, results) => {
+               if (err) {
+                  console.error("Database error updating event status:", err);
+                  return res.status(500).json({ message: "Database error" });
+               }
+               if (results.affectedRows === 0) {
+                  return res.status(404).json({ message: "Event not found" });
+               }
+
+               // If status is DELETED, create a notification for the organizer
+               if (status === "DELETED") {
+                  const notificationSql = `INSERT INTO notification (user_id, event_id) VALUES (?, ?)`;
+                  db.query(
+                     notificationSql,
+                     [organizerId, event_id],
+                     (notifErr) => {
+                        if (notifErr) {
+                           console.error(
+                              "Error creating notification:",
+                              notifErr
+                           );
+                           // Don't fail the request if notification fails
+                        }
+                     }
+                  );
+               }
+
+               res.status(200).json({
+                  message: "Event status updated successfully",
+                  ok: true,
+               });
+            });
+         }
+      );
+   }
+);
+
+// get events by organizer
 eventsRouter.get("/organizer/:organizer_id", (req, res) => {
-    const { organizer_id } = req.params;
+   const { organizer_id } = req.params;
    if (!organizer_id) {
       res.status(400).send("Organizer ID is required");
       return;
    }
 
-   const sql = `SELECT events.*, users.name AS organizer_name, users.email AS organizer_email
-                FROM events
-                JOIN users ON events.organizer_id = users.id
-                WHERE events.organizer_id = ?
-                ORDER by event_date ASC`;
+   const sql = `
+    SELECT 
+      events.id, events.organizer_id, events.title, events.description, events.category,
+      COALESCE(events.imageUrl, ?) AS imageUrl,
+      events.event_date, events.location, events.ticket_capacity, events.remaining_tickets, events.ticket_type,
+      users.name AS organizer_name, users.email AS organizer_email
+    FROM events
+    JOIN users ON events.organizer_id = users.id
+    WHERE events.organizer_id = ?
+    ORDER BY event_date ASC
+  `;
 
-   db.query(sql, [organizer_id], (err, results) => {
+   db.query(sql, [DEFAULT_EVENT_IMAGE, organizer_id], (err, results) => {
       if (err) {
          console.error(err);
          res.status(500).send("Database error");
@@ -49,10 +177,9 @@ eventsRouter.get("/organizer/:organizer_id", (req, res) => {
    });
 });
 
-// get event by id
-
+// create event
 eventsRouter.post("/create", requireAuth(), (req, res) => {
-   const { userId } = getAuth(req); // Clerk user ID
+   const { userId } = getAuth(req);
 
    const {
       title,
@@ -70,7 +197,6 @@ eventsRouter.post("/create", requireAuth(), (req, res) => {
       !title ||
       !description ||
       !category ||
-      !imageUrl ||
       !event_date ||
       !location ||
       !ticket_capacity ||
@@ -96,13 +222,16 @@ eventsRouter.post("/create", requireAuth(), (req, res) => {
       }
 
       const organizer_id = rows[0].id;
-      const formattedDate = event_date.replace("T", " ");
-      const lowerTicketType = ticket_type.toLowerCase();
+      const formattedDate = (event_date || "").includes("T")
+         ? event_date.replace("T", " ")
+         : event_date;
+      const lowerTicketType = String(ticket_type).toLowerCase();
+      const img = (imageUrl || "").trim() || DEFAULT_EVENT_IMAGE;
 
       const insertSQL = `
         INSERT INTO events 
-        (organizer_id, title, description, category, imageUrl, event_date, location, ticket_capacity, remaining_tickets, ticket_type)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        (organizer_id, title, description, category, imageUrl, event_date, location, ticket_capacity, remaining_tickets, ticket_type, status)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'PUBLISHED')
       `;
       db.query(
          insertSQL,
@@ -111,7 +240,7 @@ eventsRouter.post("/create", requireAuth(), (req, res) => {
             title,
             description,
             category,
-            imageUrl,
+            img,
             formattedDate,
             location,
             ticket_capacity,
@@ -154,7 +283,6 @@ eventsRouter.put("/:event_id", (req, res) => {
       !title ||
       !description ||
       !category ||
-      !imageUrl ||
       !event_date ||
       !location ||
       !ticket_capacity ||
@@ -170,18 +298,23 @@ eventsRouter.put("/:event_id", (req, res) => {
         WHERE id=?
     `;
 
+   const formattedDate = (event_date || "").includes("T")
+      ? event_date.replace("T", " ")
+      : event_date;
+   const img = (imageUrl || "").trim() || DEFAULT_EVENT_IMAGE;
+
    db.query(
       sql,
       [
          title,
          description,
          category,
-         imageUrl,
-         event_date,
+         img,
+         formattedDate,
          location,
          ticket_capacity,
          remaining_tickets,
-         ticket_type,
+         String(ticket_type).toLowerCase(),
          event_id,
       ],
       (err, results) => {
@@ -208,13 +341,17 @@ eventsRouter.get("/:user_id", (req, res) => {
    if (!user_id) return res.status(400).send("User ID is required");
 
    const sql = `
-        SELECT events.*, users.name AS organizer_name, users.email AS organizer_email
+        SELECT 
+          events.id, events.organizer_id, events.title, events.description, events.category,
+          COALESCE(events.imageUrl, ?) AS imageUrl,
+          events.event_date, events.location, events.ticket_capacity, events.remaining_tickets, events.ticket_type,
+          users.name AS organizer_name, users.email AS organizer_email
         FROM userSavedEvents 
         JOIN events ON userSavedEvents.event_id = events.id
         JOIN users ON events.organizer_id = users.id
-        WHERE user_id = ?
+        WHERE userSavedEvents.user_id = ?
     `;
-   db.query(sql, [user_id], (err, results) => {
+   db.query(sql, [DEFAULT_EVENT_IMAGE, user_id], (err, results) => {
       if (err) return res.status(500).send("Database error");
       res.status(200).json(results);
    });
@@ -309,16 +446,11 @@ eventsRouter.post("/register", async (req, res) => {
 
                         try {
                            const payload = `ticket:${ticketId}-user:${user_id}-event:${event_id}`;
-                           console.log("Generating QR for:", payload);
                            const qrDataUrl = await QRCode.toDataURL(payload);
-                           console.log(
-                              "Generated QR (first 50 chars):",
-                              qrDataUrl.slice(0, 50)
-                           );
 
                            db.query(
-                              `UPDATE tickets SET qr_code = ?, qr_payload= ? WHERE id = ?`,
-                              [qrDataUrl, payload,  ticketId],
+                              `UPDATE tickets SET qr_code = ?, qr_payload = ? WHERE id = ?`,
+                              [qrDataUrl, payload, ticketId],
                               (err2) => {
                                  if (err2) {
                                     console.error(
@@ -362,7 +494,6 @@ eventsRouter.post("/register", async (req, res) => {
                               .json({ message: "QR generation failed" });
                         }
                      } else {
-                        // waitlisted
                         res.status(200).json({
                            message: "Added to waitlist",
                            status: status,
@@ -379,8 +510,6 @@ eventsRouter.post("/register", async (req, res) => {
 // unregister student from an event
 eventsRouter.post("/unregister", (req, res) => {
    const { user_id, event_id } = req.body;
-
-   console.log("Unregister request received:", { user_id, event_id });
 
    if (!user_id || !event_id) {
       return res
@@ -455,7 +584,9 @@ eventsRouter.get("/registered/:user_id", (req, res) => {
 
    const sql = `
       SELECT 
-         events.*, 
+         events.id, events.organizer_id, events.title, events.description, events.category,
+         COALESCE(events.imageUrl, ?) AS imageUrl,
+         events.event_date, events.location, events.ticket_capacity, events.remaining_tickets, events.ticket_type,
          users.name AS organizer_name, 
          users.email AS organizer_email,
          tickets.status AS registration_status,
@@ -467,7 +598,7 @@ eventsRouter.get("/registered/:user_id", (req, res) => {
       ORDER BY events.event_date ASC
    `;
 
-   db.query(sql, [user_id], (err, results) => {
+   db.query(sql, [DEFAULT_EVENT_IMAGE, user_id], (err, results) => {
       if (err) {
          console.error("Database error getting registered events:", err);
          return res.status(500).json({ message: "Database error" });
@@ -475,6 +606,7 @@ eventsRouter.get("/registered/:user_id", (req, res) => {
       res.status(200).json(results);
    });
 });
+
 eventsRouter.get("/:id/export", requireAuth(), (req, res) => {
    const { id: eventId } = req.params;
    const { userId } = getAuth(req);
@@ -541,103 +673,101 @@ eventsRouter.get("/:id/export", requireAuth(), (req, res) => {
       }
    );
 });
- eventsRouter.post("/check-in", requireAuth(), (req,res) => {
-   
 
+eventsRouter.post("/check-in", requireAuth(), (req, res) => {
    const { userId } = getAuth(req);
-   const  {payload, event_id } = req.body;
+   const { payload, event_id } = req.body;
 
    if (!payload || !event_id) {
       return res.status(400).json({ message: "Payload/event ID missing" });
    }
 
-   console.log("🧾 Clerk userId:", userId);
-   console.log("🧾 event_id:", event_id);
-
-   const getOrganizerSQL = "SELECT id FROM users WHERE clerk_id = ? AND role = 'organizer'";
+   const getOrganizerSQL =
+      "SELECT id FROM users WHERE clerk_id = ? AND role = 'organizer'";
 
    db.query(getOrganizerSQL, [userId], (err, rows) => {
-      if (err)
-      {
+      if (err) {
          console.error(err);
          return res.status(500).json({ message: "Database error" });
       }
       if (rows.length === 0) {
-         return res.status(403).json({ message: "User not authorized as organizer" });
+         return res
+            .status(403)
+            .json({ message: "User not authorized as organizer" });
       }
       const organizerId = rows[0].id;
-      console.log("✅ Organizer internal ID:", organizerId);
 
-      const checkEventSQL = "SELECT organizer_id FROM events WHERE id = ? and organizer_id = ?";
+      const checkEventSQL =
+         "SELECT organizer_id FROM events WHERE id = ? and organizer_id = ?";
 
       db.query(checkEventSQL, [event_id, organizerId], (err2, eventRows) => {
-         if (err2)
-         {
+         if (err2) {
             console.error(err2);
             return res.status(500).json({ message: "Database error" });
-            
          }
-         console.log("🧾 Event query result:", eventRows);
          if (eventRows.length === 0) {
-            console.log("🚫 Organizer not owner of this event!");
-            return res.status(403).json({ message: "You do not have permission to check in tickets for this event." });
+            return res.status(403).json({
+               message:
+                  "You do not have permission to check in tickets for this event.",
+            });
          }
-         console.log("✅ Organizer owns event — proceeding");
-   db.query(
-      'SELECT id, event_id, checked_in FROM tickets WHERE qr_payload = ?',
-      [payload],
-      (err,rows) => {
-         if (err)
-         {
-            
-            console.error(err);
-            return res.status(500).json({ message: "Database error" });
-         }
-
-         if (rows.length === 0) {
-            return  res.status(404).json({ message: "Ticket not found",
-                                           status: "invalid",
-                                          });
-         }
-         const tk = rows[0];
-
-
-         if (tk.event_id !== parseInt(event_id)) {
-            return res.status(403).json({ message: "Ticket does not belong to this event", status: "invalid",});
-
-         }
-
-         if (tk.checked_in === 1) {
-            return res.status(200).json({ status: "already",
-                                          message: "Ticket already checked in",
-                                          });
-         }
-
 
          db.query(
-            'UPDATE tickets SET checked_in = 1 WHERE id = ?',
-            [tk.id],
-            (updateErr) => { 
-               if (updateErr)
-               {
-                  console.error(updateErr);
+            "SELECT id, event_id, checked_in FROM tickets WHERE qr_payload = ?",
+            [payload],
+            (err, rows2) => {
+               if (err) {
+                  console.error(err);
                   return res.status(500).json({ message: "Database error" });
                }
-               return res.status(200).json({
-                  status: "checked_in",
-                  message: "Ticket successfully checked in",
-               });
+
+               if (rows2.length === 0) {
+                  return res.status(404).json({
+                     message: "Ticket not found",
+                     status: "invalid",
+                  });
+               }
+               const tk = rows2[0];
+
+               if (tk.event_id !== parseInt(event_id)) {
+                  return res.status(403).json({
+                     message: "Ticket does not belong to this event",
+                     status: "invalid",
+                  });
+               }
+
+               if (tk.checked_in === 1) {
+                  return res.status(200).json({
+                     status: "already",
+                     message: "Ticket already checked in",
+                  });
+               }
+
+               db.query(
+                  "UPDATE tickets SET checked_in = 1 WHERE id = ?",
+                  [tk.id],
+                  (updateErr) => {
+                     if (updateErr) {
+                        console.error(updateErr);
+                        return res
+                           .status(500)
+                           .json({ message: "Database error" });
+                     }
+                     return res.status(200).json({
+                        status: "checked_in",
+                        message: "Ticket successfully checked in",
+                     });
+                  }
+               );
             }
-         ); 
-      }); 
-   }); 
-}); 
+         );
+      });
+   });
 });
 
-
 eventsRouter.get("/:event_id/tickets/summary", (req, res) => {
-  const { event_id } = req.params;
-  const sql = `
+   const { event_id } = req.params;
+   const sql = `
     SELECT
       e.id                                AS event_id,
       e.ticket_capacity,
@@ -651,12 +781,12 @@ eventsRouter.get("/:event_id/tickets/summary", (req, res) => {
     WHERE e.id = ?
     GROUP BY e.id, e.ticket_capacity, e.remaining_tickets
   `;
-  db.query(sql, [event_id], (err, rows) => {
-    if (err) return res.status(500).json({ message: "Database error" });
-    if (rows.length === 0) return res.status(404).json({ message: "Event not found" });
-    res.status(200).json(rows[0]);
-  });
+   db.query(sql, [event_id], (err, rows) => {
+      if (err) return res.status(500).json({ message: "Database error" });
+      if (rows.length === 0)
+         return res.status(404).json({ message: "Event not found" });
+      res.status(200).json(rows[0]);
+   });
 });
-
 
 module.exports = eventsRouter;

@@ -39,6 +39,7 @@ CREATE TABLE `events` (
   `ticket_capacity` int(11) DEFAULT 0,
   `remaining_tickets` int(11) NOT NULL,
   `ticket_type` enum('free','paid') DEFAULT 'free',
+  `status` enum('PUBLISHED','DELETED') DEFAULT 'PUBLISHED',
   `created_at` timestamp NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
