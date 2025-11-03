@@ -22,11 +22,6 @@ export default function DashboardSidemenu() {
          icon: Bell,
          label: "Notifications",
       },
-      {
-         to: "./my-tickets",
-         icon: Ticket,
-         label: "My Tickets",
-      },
    ];
 
    const studentNavItems = [
@@ -41,9 +36,7 @@ export default function DashboardSidemenu() {
    const adminNavItems = [
       { to: "./admin", icon: Users, label: "Manage Users" },
       { to: "./admin-events", icon: Calendar, label: "Manage Events" },
-      { to: "./organizer-events", icon: Calendar, label: "My Events" },
       { to: "./analytics", icon: BarChart3, label: "Analytics" },
-      { to: "./my-tickets", icon: Ticket, label: "My Tickets" },
    ];
 
    const navItems =
