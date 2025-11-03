@@ -21,7 +21,7 @@ notificationRouter.get("/", requireAuth(), (req, res) => {
             return res.status(500).json({ message: "Database error" });
          }
          if (userRows.length === 0) {
-            return res.status(404).json({ message: "User not found" });
+            return res.status(401).json({ message: "Unauthorized" });
          }
 
          const internalUserId = userRows[0].id;
@@ -77,7 +77,7 @@ notificationRouter.delete("/:notification_id", requireAuth(), (req, res) => {
             return res.status(500).json({ message: "Database error" });
          }
          if (userRows.length === 0) {
-            return res.status(404).json({ message: "User not found" });
+            return res.status(401).json({ message: "Unauthorized" });
          }
 
          const internalUserId = userRows[0].id;

@@ -43,7 +43,7 @@ function assertAdmin(req, res, next) {
       (err, rows) => {
          if (err) return res.status(500).json({ message: "Database error" });
          if (rows.length === 0)
-            return res.status(404).json({ message: "User not found" });
+            return res.status(401).json({ message: "Unauthorized" });
          if (rows[0].role !== "admin")
             return res.status(403).json({ message: "Forbidden" });
          next();
