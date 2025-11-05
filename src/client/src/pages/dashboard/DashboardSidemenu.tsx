@@ -7,44 +7,26 @@ export default function DashboardSidemenu() {
    const { role, loading } = useRole();
 
    const organizerNavItems = [
-      {
-         to: "./organizer-events",
-         icon: Calendar,
-         label: "My Events",
-      },
-      {
-         to: "./analytics",
-         icon: BarChart3,
-         label: "Analytics",
-      },
-      {
-         to: "./notifications",
-         icon: Bell,
-         label: "Notifications",
-      },
+      { to: "./organizer-events", icon: Calendar, label: "My Events" },
+      { to: "./analytics", icon: BarChart3, label: "Analytics" },
+      { to: "./notifications", icon: Bell, label: "Notifications" },
    ];
 
    const studentNavItems = [
-      {
-         to: "./my-tickets",
-         icon: Ticket,
-         label: "My Tickets",
-         end: true,
-      },
+      { to: "./my-tickets", icon: Ticket, label: "My Tickets", end: true},
+      { to: "./subscription", icon: Users, label: "My Subscription" }
    ];
 
-   const adminNavItems = [
+   const adminNavItems = [ 
       { to: "./admin", icon: Users, label: "Manage Users" },
       { to: "./admin-events", icon: Calendar, label: "Manage Events" },
       { to: "./analytics", icon: BarChart3, label: "Analytics" },
    ];
 
-   const navItems =
-      role === "student"
-         ? studentNavItems
-         : role === "admin"
-         ? adminNavItems
-         : organizerNavItems;
+   const navItems = role === "student" ? studentNavItems
+                                       : role === "admin"
+                                       ? adminNavItems
+                                       : organizerNavItems;
 
    const panelConfig = {
       student: {

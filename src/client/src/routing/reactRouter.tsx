@@ -19,6 +19,7 @@ import ProtectedRoute from "@/components/protectedRoutes";
 import MyTickets from "@/components/dashboard/users/MyTickets";
 import Home from "@/pages/Home";
 import ScanTicketPage from "@/pages/dashboard/sections/ScanTicketPage";
+import StudentSubscription from "@/pages/dashboard/sections/StudentSubscription";
 
 const authAppearance = {
    baseTheme: dark,
@@ -109,6 +110,15 @@ const router = createBrowserRouter([
                   element: (
                      <ProtectedRoute allowedRoles={["organizer"]}>
                         <OrganizerNotifications />
+                     </ProtectedRoute>
+                  ),
+               },
+               {
+                  id: "subscriptions",
+                  path: "subscriptions",
+                  element: (
+                     <ProtectedRoute allowedRoles={["student"]}>
+                        <StudentSubscription />
                      </ProtectedRoute>
                   ),
                },
