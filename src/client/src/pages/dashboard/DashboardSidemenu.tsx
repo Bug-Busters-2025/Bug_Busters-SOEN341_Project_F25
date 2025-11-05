@@ -10,6 +10,7 @@ export default function DashboardSidemenu() {
       { to: "./organizer-events", icon: Calendar, label: "My Events" },
       { to: "./analytics", icon: BarChart3, label: "Analytics" },
       { to: "./notifications", icon: Bell, label: "Notifications" },
+      { to: "./subscriptions", icon: Users, label: "My Subscriptions"},
    ];
 
    const studentNavItems = [

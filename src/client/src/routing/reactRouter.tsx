@@ -117,7 +117,7 @@ const router = createBrowserRouter([
                   id: "subscriptions",
                   path: "subscriptions",
                   element: (
-                     <ProtectedRoute allowedRoles={["student"]}>
+                     <ProtectedRoute allowedRoles={["student", "organizer"]}>
                         <StudentSubscription />
                      </ProtectedRoute>
                   ),
