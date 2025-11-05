@@ -103,4 +103,25 @@ subscriberRouter.delete("/organizers/:org_id/follow", requireAuth(), ah(async (r
     return res.status(200).json({ followed: false, deleted: false });
 }));
 
+
+/**
+ * GET /me/following
+ * list organizers I follow
+ * (adjust selected columns to your organizers table schema)
+ */
+subscriberRouter.get("/me/following", requireAuth(), ah(async (req, res) => {
+    const userId = await getMysqlUserId(req);
+
+    const [rows] = await pool.execute(
+        `SELECT o.org_id, o.name, o.slug, o.avatar_url
+         FROM organizer_subscriptions os
+         JOIN organizers o ON o.org_id = os.org_id
+        WHERE os.user_id = ?
+        ORDER BY o.name ASC`,
+        [userId]
+    );
+
+    res.json({ count: rows.length, organizers: rows });
+}));
+
 module.exports = subscriberRouter;
