@@ -50,4 +50,37 @@ subscriberRouter.get("/organizers/:org_id/followers", requireAuth(), ah(async (r
     res.json({ count: rows.length, followers: rows });
 }));
 
+
+subscriberRouter.delete("/organizers/:organizer_id/subscribers/:user_id", requireAuth(), ah(async (req, res) => {
+    const { userId: clerkId } = getAuth(req);
+
+    const [[me]] = await pool.execute(
+        "SELECT id, role FROM users WHERE clerk_id = ? LIMIT 1",
+        [clerkId]
+    );
+    if (!me) return res.status(404).json({ error: "User not found" });
+
+    const organizerId = Number(req.params.organizer_id);
+    const subscriberId = Number(req.params.user_id);
+    if (!Number.isInteger(organizerId) || !Number.isInteger(subscriberId)) {
+        return res.status(400).json({ error: "Invalid organizer_id or user_id" });
+    }
+
+    if (me.id !== organizerId) {
+        return res.status(403).json({ error: "You can only manage your own subscribers" });
+    }
+    if (me.role !== "organizer") {
+        return res.status(403).json({ error: "Only organizers can remove subscribers" });
+    }
+
+    const [result] = await pool.execute(
+        `DELETE FROM organizer_subscriptions
+        WHERE organizer_id = ? AND user_id = ?`,
+        [organizerId, subscriberId]
+    );
+
+    if (result.affectedRows > 0) return res.status(204).send();
+    return res.status(404).json({ error: "Subscription not found" });
+}));
+
 module.exports = subscriberRouter;
