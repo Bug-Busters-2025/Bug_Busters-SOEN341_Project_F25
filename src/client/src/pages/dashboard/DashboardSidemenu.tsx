@@ -14,7 +14,7 @@ export default function DashboardSidemenu() {
 
    const studentNavItems = [
       { to: "./my-tickets", icon: Ticket, label: "My Tickets", end: true},
-      { to: "./subscription", icon: Users, label: "My Subscription" }
+      { to: "./subscriptions", icon: Users, label: "My Subscriptions" }
    ];
 
    const adminNavItems = [ 
