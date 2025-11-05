@@ -148,4 +148,24 @@ subscriberRouter.get("/me/feed", requireAuth(), ah(async (req, res) => {
     res.json({ count: events.length, limit, offset, events });
 }));
 
+
+/**
+ * POST /organizers/:org_id/follow
+ * insert into organizer_subscriptions (user_id, org_id)
+ */
+subscriberRouter.post("/organizers/:org_id/follow", requireAuth(), ah(async (req, res) => {
+    const userId = await getMysqlUserId(req);
+    const orgId = toInt(req.params.org_id);
+    if (!orgId) return res.status(400).json({ error: "Invalid org_id" });
+
+    const [result] = await pool.execute(
+        `INSERT IGNORE INTO organizer_subscriptions (user_id, org_id)
+        VALUES (?, ?)`,
+        [userId, orgId]
+    );
+
+    const created = result.affectedRows > 0;
+    return res.status(created ? 201 : 200).json({ followed: true, created });
+}));
+
 module.exports = subscriberRouter;
