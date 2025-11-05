@@ -2,7 +2,7 @@ const { Router } = require("express");
 const { pool } = require("../db");
 const { requireAuth, getAuth } = require("@clerk/express");
 
-const subscriberRouter = Router();
+const subscriptionsRouter = Router();
 
 const ah = (fn) => (req, res, next) => Promise.resolve(fn(req, res, next)).catch(next);
 
@@ -34,7 +34,7 @@ function toInt(v) {
  * GET /organizers/:org_id/followers
  * list followers for an organizer
  */
-subscriberRouter.get("/organizers/:org_id/followers", requireAuth(), ah(async (req, res) => {
+subscriptionsRouter.get("/organizers/:org_id/followers", requireAuth(), ah(async (req, res) => {
     const orgId = toInt(req.params.org_id);
     if (!orgId) return res.status(400).json({ error: "Invalid org_id" });
 
@@ -51,7 +51,7 @@ subscriberRouter.get("/organizers/:org_id/followers", requireAuth(), ah(async (r
 }));
 
 
-subscriberRouter.delete("/organizers/:organizer_id/subscribers/:user_id", requireAuth(), ah(async (req, res) => {
+subscriptionsRouter.delete("/organizers/:organizer_id/subscribers/:user_id", requireAuth(), ah(async (req, res) => {
     const { userId: clerkId } = getAuth(req);
 
     const [[me]] = await pool.execute(
@@ -88,7 +88,7 @@ subscriberRouter.delete("/organizers/:organizer_id/subscribers/:user_id", requir
  * DELETE /organizers/:org_id/follow
  * delete from organizer_subscriptions
  */
-subscriberRouter.delete("/organizers/:org_id/follow", requireAuth(), ah(async (req, res) => {
+subscriptionsRouter.delete("/organizers/:org_id/follow", requireAuth(), ah(async (req, res) => {
     const userId = await getMysqlUserId(req);
     const orgId = toInt(req.params.org_id);
     if (!orgId) return res.status(400).json({ error: "Invalid org_id" });
@@ -109,7 +109,7 @@ subscriberRouter.delete("/organizers/:org_id/follow", requireAuth(), ah(async (r
  * list organizers I follow
  * (adjust selected columns to your organizers table schema)
  */
-subscriberRouter.get("/me/following", requireAuth(), ah(async (req, res) => {
+subscriptionsRouter.get("/me/following", requireAuth(), ah(async (req, res) => {
     const userId = await getMysqlUserId(req);
 
     const [rows] = await pool.execute(
@@ -130,7 +130,7 @@ subscriberRouter.get("/me/following", requireAuth(), ah(async (req, res) => {
  * Query: ?limit=50&offset=0
  * Assumes events.org_id references organizers.org_id
  */
-subscriberRouter.get("/me/feed", requireAuth(), ah(async (req, res) => {
+subscriptionsRouter.get("/me/feed", requireAuth(), ah(async (req, res) => {
     const userId = await getMysqlUserId(req);
     const limit = toInt(req.query.limit) ?? 50;
     const offset = toInt(req.query.offset) ?? 0;
@@ -153,7 +153,7 @@ subscriberRouter.get("/me/feed", requireAuth(), ah(async (req, res) => {
  * POST /organizers/:org_id/follow
  * insert into organizer_subscriptions (user_id, org_id)
  */
-subscriberRouter.post("/organizers/:org_id/follow", requireAuth(), ah(async (req, res) => {
+subscriptionsRouter.post("/organizers/:org_id/follow", requireAuth(), ah(async (req, res) => {
     const userId = await getMysqlUserId(req);
     const orgId = toInt(req.params.org_id);
     if (!orgId) return res.status(400).json({ error: "Invalid org_id" });
@@ -168,4 +168,4 @@ subscriberRouter.post("/organizers/:org_id/follow", requireAuth(), ah(async (req
     return res.status(created ? 201 : 200).json({ followed: true, created });
 }));
 
-module.exports = subscriberRouter;
+module.exports = subscriptionsRouter;
