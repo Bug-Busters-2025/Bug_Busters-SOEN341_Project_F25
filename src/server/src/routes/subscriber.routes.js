@@ -124,4 +124,28 @@ subscriberRouter.get("/me/following", requireAuth(), ah(async (req, res) => {
     res.json({ count: rows.length, organizers: rows });
 }));
 
+/**
+ * GET /me/feed
+ * events from organizers I follow (published only)
+ * Query: ?limit=50&offset=0
+ * Assumes events.org_id references organizers.org_id
+ */
+subscriberRouter.get("/me/feed", requireAuth(), ah(async (req, res) => {
+    const userId = await getMysqlUserId(req);
+    const limit = toInt(req.query.limit) ?? 50;
+    const offset = toInt(req.query.offset) ?? 0;
+
+    const [events] = await pool.execute(
+        `SELECT e.*
+         FROM events e
+         JOIN organizer_subscriptions os ON os.org_id = e.org_id
+        WHERE os.user_id = ? AND e.status = 'PUBLISHED'
+        ORDER BY e.event_date DESC
+        LIMIT ? OFFSET ?`,
+        [userId, limit, offset]
+    );
+
+    res.json({ count: events.length, limit, offset, events });
+}));
+
 module.exports = subscriberRouter;
