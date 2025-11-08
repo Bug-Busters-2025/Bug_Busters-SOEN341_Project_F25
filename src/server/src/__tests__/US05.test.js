@@ -2,7 +2,7 @@ const request = require("supertest");
 const app = require("../app");
 
 describe("US05 - Create Events", () => {
-  test("POST /api/v1/events/create creates a new event", async () => {
+  test("POST /api/v1/events/create successfully creates a new event", async () => {
     const res = await request(app)
       .post("/api/v1/events/create")
       .send({
@@ -15,6 +15,19 @@ describe("US05 - Create Events", () => {
         ticket_capacity: 100,
         ticket_type: "free",
       });
-    expect([201, 400, 500, 302]).toContain(res.statusCode);
+
+    expect(res.body).toHaveProperty("message");
+    expect(res.body.message).toMatch(/created|success/i);
+  });
+
+  test("POST /api/v1/events/create fails when missing required fields", async () => {
+    const res = await request(app)
+      .post("/api/v1/events/create")
+      .send({
+        title: "Event Missing Fields"
+       
+      });
+
+    expect(res.statusCode).toBe(400);
   });
 });
