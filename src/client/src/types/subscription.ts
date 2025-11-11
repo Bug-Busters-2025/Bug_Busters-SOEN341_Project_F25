@@ -7,10 +7,9 @@ export interface UserSummary {
 }
 
 export interface OrganizerSummary {
-    id: number;
+    organizer_id: number;
     name: string;
     email: string;
-    avatarUrl?: string; // maybe?
 }
 
 export interface OrganizerSubscription {
@@ -28,7 +27,6 @@ export interface FollowOrganizerResponse {
 }
 
 // DELETE /organizers/:organizer_id/follow
-// 204 No Content on success; otherwise a JSON error.
 export interface UnfollowOrganizerResponse {
     removed: boolean;
 }
@@ -51,4 +49,14 @@ export interface FeedResponse {
     limit: number;
     offset: number;
     events: Event[];
+}
+
+
+// Outlet context type
+export interface SubscriptionContextType {
+    events: Event[];
+    organizers: OrganizerSummary[];
+    isFollowing: (orgId: number) => boolean;
+    onFollow: (orgId: number) => Promise<FollowOrganizerResponse>;
+    onUnfollow: (orgId: number) => Promise<UnfollowOrganizerResponse>;
 }

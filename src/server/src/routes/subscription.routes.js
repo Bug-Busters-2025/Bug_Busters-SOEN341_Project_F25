@@ -106,7 +106,6 @@ subscriptionsRouter.delete("/organizers/:organizer_id/follow", requireAuth(), ah
  */
 subscriptionsRouter.get("/me/following", requireAuth(), ah(async (req, res) => {
     const userId = await getMysqlUserId(req);
-    console.log("userId: ", userId)
     try {
         const [rows] = await pool.execute(
             `SELECT u.id            AS organizer_id,
