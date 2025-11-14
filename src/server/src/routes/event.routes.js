@@ -4,6 +4,7 @@ const eventsRouter = Router();
 const db = require("../db.js");
 const { format } = require("@fast-csv/format");
 const QRCode = require("qrcode");
+const crypto = require("crypto");
 
 const DEFAULT_EVENT_IMAGE = "";
 
@@ -445,7 +446,7 @@ eventsRouter.post("/register", async (req, res) => {
                         const ticketId = results.insertId;
 
                         try {
-                           const payload = `ticket:${ticketId}-user:${user_id}-event:${event_id}`;
+                           const payload = crypto.randomBytes(16).toString("base64url");
                            const qrDataUrl = await QRCode.toDataURL(payload);
 
                            db.query(
@@ -457,6 +458,7 @@ eventsRouter.post("/register", async (req, res) => {
                                        "Error saving QR code:",
                                        err2
                                     );
+                                    console.log(payload);
                                     return res
                                        .status(500)
                                        .json({ message: "Error saving QR" });
