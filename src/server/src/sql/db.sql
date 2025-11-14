@@ -116,6 +116,33 @@ INSERT INTO `users` (`id`, `name`, `email`, `password_hash`, `role`, `created_at
 (7, 'Mark Chen', 'mark@example.com', 'dummyhash', 'student', '2025-10-12 21:04:35', NULL);
 
 -- --------------------------------------------------------
+--
+-- Table structure for table `organizer_subscriptions`
+--
+
+CREATE TABLE organizer_subscriptions (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  organizer_id INT NOT NULL,
+  user_id INT NOT NULL,
+  created_at TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP,
+
+  UNIQUE KEY uniq_organizer_user (organizer_id, user_id),
+
+  CONSTRAINT fk_os_organizer
+    FOREIGN KEY (organizer_id) REFERENCES users(id)
+    ON DELETE CASCADE,
+  CONSTRAINT fk_os_user
+    FOREIGN KEY (user_id) REFERENCES users(id)
+    ON DELETE CASCADE
+);
+
+--
+-- Dumping data for table `userSavedEvents`
+--
+
+
+
+-- --------------------------------------------------------
 
 --
 -- Table structure for table `userSavedEvents`
