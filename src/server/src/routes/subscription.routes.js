@@ -133,8 +133,13 @@ subscriptionsRouter.get("/me/following", requireAuth(), ah(async (req, res) => {
  */
 subscriptionsRouter.get("/me/feed", requireAuth(), ah(async (req, res) => {
     const userId = await getMysqlUserId(req);
-    const limit = toInt(req.query.limit) ?? 50;
-    const offset = toInt(req.query.offset) ?? 0;
+  
+    const rawLimit = toInt(req.query.limit);
+    const rawOffset = toInt(req.query.offset);
+  
+    const limit = Number.isInteger(rawLimit) && rawLimit > 0 && rawLimit <= 100 ? rawLimit : 50;
+    const offset = Number.isInteger(rawOffset) && rawOffset >= 0 ? rawOffset : 0;
+  
     try {
         const [events] = await pool.execute(
             `SELECT e.*
@@ -142,9 +147,10 @@ subscriptionsRouter.get("/me/feed", requireAuth(), ah(async (req, res) => {
             JOIN organizer_subscriptions AS os ON os.organizer_id = e.organizer_id
             WHERE os.user_id = ?
             ORDER BY e.event_date DESC
-            LIMIT ? OFFSET ?`,
-            [userId, limit, offset]
+            LIMIT ${limit} OFFSET ${offset}`,
+            [userId]
         );
+    
         return res.json({ count: events.length, limit, offset, events });
     } catch (err) {
         console.error("GET /me/feed error:", err?.message);
