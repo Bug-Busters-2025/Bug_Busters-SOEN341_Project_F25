@@ -1,5 +1,5 @@
 describe("US13 - ", () => {
-    test.skip("", () => {
-      // Placeholder -
-    });
+  test.skip("", () => {
+    // Placeholder -
   });
+});

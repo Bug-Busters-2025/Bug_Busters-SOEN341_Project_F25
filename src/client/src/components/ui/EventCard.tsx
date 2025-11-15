@@ -6,7 +6,7 @@ import {
    CardTitle,
 } from "@/components/ui/card";
 import { Calendar, MapPin, Users, Trash, Pencil } from "lucide-react";
-import { type Event } from "@/data/events";
+import { type Event } from "@/types/event";
 import { formatDate } from "@/utils/dateTimeUtils";
 
 interface eventCardProps {

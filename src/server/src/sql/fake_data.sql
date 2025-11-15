@@ -147,4 +147,21 @@ WHERE u.email = 'dance-society@events.local'
     WHERE e.title = 'Dance Workshop' AND e.event_date = '2025-10-22 19:00:00'
   );
 
+INSERT INTO users (id, name, email, role, clerk_id)
+VALUES
+  (881, 'Test Student', 'student@example.com', 'student', 'test-user'),
+  (882, 'Organizer One', 'org1@example.com', 'organizer', NULL),
+  (883, 'Organizer Two', 'org2@example.com', 'organizer', NULL),
+  (884, 'Another Student', 'student2@example.com', 'student', NULL);
+
+INSERT INTO events (organizer_id, title, description, category, imageUrl, event_date, location, ticket_capacity, remaining_tickets, ticket_type)
+VALUES
+  (882, 'Campus Concert', 'Live music night', 'Music', 'https://example.com/img1.jpg', NOW(), 'Main Hall', 100, 50, 'free'),
+  (882, 'Tech Talk', 'JS & Node deep dive', 'Tech', 'https://example.com/img2.jpg', DATE_ADD(NOW(), INTERVAL 1 DAY), 'Auditorium', 80, 80, 'free'),
+  (883, 'Art Expo', 'Student art exhibition', 'Art', 'https://example.com/img3.jpg', DATE_ADD(NOW(), INTERVAL 2 DAY), 'Gallery', 120, 120, 'paid');
+  
+INSERT INTO organizer_subscriptions (user_id, organizer_id)
+VALUES
+  (881, 882);
+
 COMMIT;

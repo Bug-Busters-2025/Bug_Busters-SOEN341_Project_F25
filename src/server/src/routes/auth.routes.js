@@ -15,7 +15,7 @@ authRouter.post("/sync", requireAuth(), (req, res) => {
       "SELECT id, clerk_id FROM users WHERE email = ? OR clerk_id = ?";
    db.query(checkSQL, [email, userId], (err, rows) => {
       if (err) {
-         console.error("❌ Database error:", err);
+         console.error("Database error:", err);
          return res.status(500).send("Database error");
       }
 
@@ -26,12 +26,12 @@ authRouter.post("/sync", requireAuth(), (req, res) => {
       `;
          db.query(insertSQL, [userId, name, email, role], (err2) => {
             if (err2) {
-               console.error("❌ Insert failed:", err2);
+               console.error("Insert failed:", err2);
                return res.status(500).send("Database error");
             }
             return res
                .status(201)
-               .json({ message: `✅ User created as ${role}`, userId });
+               .json({ message: `User created as ${role}`, userId });
          });
       } else {
          const updateSQL = `
@@ -41,12 +41,12 @@ authRouter.post("/sync", requireAuth(), (req, res) => {
       `;
          db.query(updateSQL, [name, userId, email], (err2) => {
             if (err2) {
-               console.error("❌ Update failed:", err2);
+               console.error("Update failed:", err2);
                return res.status(500).send("Database error");
             }
             return res
                .status(200)
-               .json({ message: `♻️ User updated as ${role}`, userId });
+               .json({ message: `User updated as ${role}`, userId });
          });
       }
    });
@@ -65,17 +65,17 @@ authRouter.get("/role/:email", (req, res) => {
 
 authRouter.get("/me", requireAuth(), (req, res) => {
    const { userId } = getAuth(req);
-   console.log("🔍 Fetching MySQL ID for Clerk user:", userId);
+   console.log("Fetching MySQL ID for Clerk user:", userId);
 
    const sql = "SELECT id, name, email, role FROM users WHERE clerk_id = ?";
    db.query(sql, [userId], (err, rows) => {
       if (err) {
-         console.error("❌ Database error:", err);
+         console.error("Database error:", err);
          return res.status(500).json({ message: "Database error", error: err });
       }
 
       if (rows.length === 0) {
-         console.warn("⚠️ No user found for Clerk ID:", userId);
+         console.warn("No user found for Clerk ID:", userId);
          return res.status(404).json({ message: "No user found" });
       }
 

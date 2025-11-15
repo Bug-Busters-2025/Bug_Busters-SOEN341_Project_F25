@@ -1,9 +1,9 @@
 const { Router } = require("express");
 const { pool } = require("../db");
 
-const router = Router();
+const analyticsRouter = Router();
 
-router.get("/summary", async (_req, res, next) => {
+analyticsRouter.get("/summary", async (_req, res, next) => {
   try {
     const [[{ c: events }]] = await pool.query("SELECT COUNT(*) c FROM events");
     const [[{ c: tickets }]] = await pool.query("SELECT COUNT(*) c FROM tickets");
@@ -21,7 +21,7 @@ router.get("/summary", async (_req, res, next) => {
   }
 });
 
-router.get("/participation", async (_req, res, next) => {
+analyticsRouter.get("/participation", async (_req, res, next) => {
   try {
     const [rows] = await pool.query(
       `SELECT 
@@ -48,4 +48,4 @@ router.get("/participation", async (_req, res, next) => {
   }
 });
 
-module.exports = router;
+module.exports = analyticsRouter;
