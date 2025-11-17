@@ -17,3 +17,11 @@ Each team member contributed to different parts of the system. The following lis
 - I edited README to include things necessary for sprint 4 such as user guide.
 
 
+### Jeremy de Passorio (JeremDePass & valpay-depassorio)
+
+- I connected the database to the backend
+- I set up backend endpoints to display events
+- I implemented the event moderation functionality
+- I implemented the notification functionality for organizers
+- I implemented acceptance tests for US10
+- I contributed to the sprint 1 requirements determination and writing of the user stories
