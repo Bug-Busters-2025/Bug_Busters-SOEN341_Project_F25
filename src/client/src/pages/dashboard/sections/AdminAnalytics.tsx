@@ -29,7 +29,7 @@ type ParticipationPoint = {
    checkedIn: number;
 };
 
-export default function OrganizerAnalytics() {
+export default function AdminAnalytics() {
    const calendarRef = useRef<HTMLDivElement | null>(null);
    const [events, setEvents] = useState<Event[]>([]);
    const [loading, setLoading] = useState(true);
@@ -289,7 +289,7 @@ export default function OrganizerAnalytics() {
             </div>
          </AnalyticsSection>
 
-         {role === "organizer" && (
+         {role === "admin" && (
             <AnalyticsSection
                title="My Subscribers"
                subtitle="View your subscriber list"

@@ -1,12 +1,11 @@
-import { RouterProvider } from "react-router/dom";
-import router from "./routing/reactRouter.tsx";
-import { ThemeProvider } from "./contexts/ThemeContext.tsx";
+import { RouterProvider } from "react-router";
+import router from "./routing/reactRouter";
+import { ThemeProvider } from "./contexts/ThemeContext";
 
 export default function App() {
-   return (
-      <ThemeProvider>
-         {/* future clerk provider implementation */}
-         <RouterProvider router={router} />
-      </ThemeProvider>
-   );
+  return (
+    <ThemeProvider>
+      <RouterProvider router={router} />
+    </ThemeProvider>
+  );
 }

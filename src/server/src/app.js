@@ -22,20 +22,6 @@ app.get('/api/health/db', async (_req, res, next) => {
   try { res.json({ ok: await ping() }); } catch (e) { next(e); }
 });
 
-app.get('/api/debug/events-count', async (_req, res, next) => {
-  try {
-    const [[{ c }]] = await pool.query('SELECT COUNT(*) c FROM events');
-    res.json({ events: Number(c) });
-  } catch (e) { next(e); }
-});
-
-app.get('/api/debug/events', async (_req, res, next) => {
-  try {
-    const [rows] = await pool.query('SELECT * FROM events LIMIT 50');
-    res.json(rows);
-  } catch (e) { next(e); }
-});
-
 const useAuth = process.env.ENABLE_AUTH === '1';
 if (useAuth) {
   app.use(clerkMiddleware());
