@@ -1,28 +1,37 @@
-import type { FollowOrganizerResponse, FollowingListResponse, FeedResponse } from "@/types/subscription";
+import axios from "axios";
+import type {
+    FollowOrganizerResponse,
+    FollowingListResponse,
+    FeedResponse
+} from "@/types/subscription";
 
-const api = (path: string, init?: RequestInit) =>
-    fetch(`http://localhost:3000/api/v1/subscriptions${path}`, { credentials: "include", ...init });
+const api = axios.create({
+    baseURL: "http://localhost:3000/api/v1/subscriptions",
+    withCredentials: true,
+});
 
 export async function followOrganizer(organizerId: number): Promise<FollowOrganizerResponse> {
-    const res = await api(`/organizers/${organizerId}/follow`, { method: "POST" });
-    if (!res.ok) throw new Error(`Follow failed: ${res.status}`);
-    return res.json();
+    const res = await api.post<FollowOrganizerResponse>(
+        `/organizers/${organizerId}/follow`
+    );
+    return res.data;
 }
 
 export async function unfollowOrganizer(organizerId: number): Promise<void> {
-    const res = await api(`/organizers/${organizerId}/follow`, { method: "DELETE" });
+    const res = await api.delete(`/organizers/${organizerId}/follow`);
+
     if (res.status === 204) return;
-    if (!res.ok) throw new Error(`Unfollow failed: ${res.status}`);
+    if (res.status < 200 || res.status >= 300) {
+        throw new Error(`Unfollow failed: ${res.status}`);
+    }
 }
 
 export async function getFollowing(): Promise<FollowingListResponse> {
-    const res = await api("/me/following");
-    if (!res.ok) throw new Error(`Fetch following failed: ${res.status}`);
-    return res.json();
+    const res = await api.get<FollowingListResponse>("/me/following");
+    return res.data;
 }
 
 export async function getMyFeed(limit = 50, offset = 0): Promise<FeedResponse> {
-    const res = await api(`/me/feed?limit=${limit}&offset=${offset}`);
-    if (!res.ok) throw new Error(`Fetch feed failed: ${res.status}`);
-    return res.json();
+    const res = await api.get<FeedResponse>("/me/feed", {params: { limit, offset },});
+    return res.data;
 }

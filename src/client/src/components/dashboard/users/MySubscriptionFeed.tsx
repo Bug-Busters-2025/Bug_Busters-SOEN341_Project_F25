@@ -34,7 +34,7 @@ export default function MySubscriptionFeed() {
 
     return (
         <div className="w-full h-full space-y-6 p-6 flex flex-col items-center">
-            <div className="w-full max-w-4xl justify-between">
+            <div className="w-full justify-between">
                 <div className="flex flex-row overflow-x-auto space-x-2 p-4">
                     <Card 
                         className={`min-w-[150px] cursor-pointer ${selectedOrg === -1 ? 'ring-2 ring-primary border-primary' : ''}`}
@@ -56,7 +56,7 @@ export default function MySubscriptionFeed() {
                                 onClick={() => handleClick(org.organizer_id)}
                             >
                                 <CardContent className="p-3 flex flex-col justify-center text-center">
-                                    <span className="text-sm font-medium">{org.email}</span>
+                                    <span className="text-sm font-medium">{org.organizer_email}</span>
                                     <span className="text-xs text-neutral-400">{orgEventCount} Events</span>
                                 </CardContent>
                             </Card>
@@ -64,12 +64,12 @@ export default function MySubscriptionFeed() {
                     })}
                 </div>
             </div>
-            <div className="w-full max-w-4xl flex-1 rounded-md border p-4 overflow-y-auto">
+            <div className="w-full flex-1 rounded-md border p-4 overflow-y-auto">
                 {filteredEvents.length === 0 ? (
                     <p className="text-center text-neutral-500 py-10">
                         {selectedOrg === -1 
                             ? "No events found from any followed organizers." 
-                            : `No events found for ${organizers.find(o => o.organizer_id === selectedOrg)?.name}.`
+                            : `No events found for Organizer: ${organizers.find(o => o.organizer_id === selectedOrg)?.organizer_name}.`
                         }
                     </p>
                 ) : (

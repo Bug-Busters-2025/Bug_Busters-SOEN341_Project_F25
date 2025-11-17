@@ -1,15 +1,15 @@
 import { type Event } from "./event";
 
 export interface UserSummary {
-    id: number;
+    user_id: number;
     name: string;
     email: string;
 }
 
 export interface OrganizerSummary {
     organizer_id: number;
-    name: string;
-    email: string;
+    organizer_name: string;
+    organizer_email: string;
 }
 
 export interface OrganizerSubscription {

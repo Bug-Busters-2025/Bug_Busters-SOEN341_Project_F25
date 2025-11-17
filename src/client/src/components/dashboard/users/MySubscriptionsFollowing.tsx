@@ -11,16 +11,15 @@ export default function MySubscriptionsFollowing() {
             {organizers.length === 0 ? (
             <p className="text-sm text-neutral-400">You’re not following anyone yet.</p>
             ) : (
-            <ul className="space-y-2">
+            <ul className="space-y-4">
                 {organizers.map((org) => (
                 <li
                     key={org.organizer_id}
-                    className="flex items-center justify-between rounded-lg border border-white/10 p-3"
+                    className="flex items-center justify-between rounded-lg border border-white/10 p-3 min-w-[250px]"
                 >
                     <div className="flex items-center gap-3">
                         <div>
-                            <div className="font-medium">{org.name}</div>
-                            <div className="text-xs text-neutral-400">{org.email}</div>
+                            <div className="font-medium">{org.organizer_name}</div>
                         </div>
                     </div>
                     <button

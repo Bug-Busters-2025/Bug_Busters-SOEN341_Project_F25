@@ -3,7 +3,6 @@ const { pool } = require("../db");
 const { requireAuth, getAuth } = require("@clerk/express");
 
 const subscriptionsRouter = Router();
-const ah = (fn) => (req, res, next) => Promise.resolve(fn(req, res, next)).catch(next);
 
 async function getMysqlUserId(req) {
     const { userId: clerkId } = getAuth(req);
@@ -26,7 +25,7 @@ const toInt = (v) => (Number.isInteger(Number(v)) ? Number(v) : null);
  * GET /organizers/:organizer_id/followers
  * list followers (users) for an organizer
  */
-subscriptionsRouter.get("/organizers/:organizer_id/followers", requireAuth(), ah(async (req, res) => {
+subscriptionsRouter.get("/organizers/:organizer_id/followers", requireAuth(), async (req, res) => {
     const organizerId = toInt(req.params.organizer_id);
     if (!organizerId) return res.status(400).json({ error: "Invalid organizer_id" });
 
@@ -45,16 +44,14 @@ subscriptionsRouter.get("/organizers/:organizer_id/followers", requireAuth(), ah
         console.error("GET /organizers/:organizer_id/followers error:", err?.message);
         res.status(500).json({ error: "Failed to get list of followers" });
     }
-}));
+});
 
 /**
  * DELETE /organizers/:organizer_id/subscribers/:user_id
  * remove a specific subscriber from an organizer
  */
-subscriptionsRouter.delete("/organizers/:organizer_id/subscribers/:user_id", requireAuth(), ah(async (req, res) => {
-    const { userId: clerkId } = getAuth(req);
-    const [[me]] = await pool.execute("SELECT id, role FROM users WHERE clerk_id = ? LIMIT 1", [clerkId]);
-    if (!me) return res.status(404).json({ error: "User not found" });
+subscriptionsRouter.delete("/organizers/:organizer_id/subscribers/:user_id", requireAuth(), async (req, res) => {
+    const userId = await getMysqlUserId(req);
 
     const organizerId = toInt(req.params.organizer_id);
     const subscriberId = toInt(req.params.user_id);
@@ -74,13 +71,13 @@ subscriptionsRouter.delete("/organizers/:organizer_id/subscribers/:user_id", req
         console.error("DELETE /organizers/:organizer_id/subscribers/:user_id error:", err?.message);
         res.status(500).json({ error: "Failed to remove subscriber" });
     }
-}));
+});
 
 /**
  * DELETE /organizers/:organizer_id/follow
  * current user unfollows organizer
  */
-subscriptionsRouter.delete("/organizers/:organizer_id/follow", requireAuth(), ah(async (req, res) => {
+subscriptionsRouter.delete("/organizers/:organizer_id/follow", requireAuth(), async (req, res) => {
     const userId = await getMysqlUserId(req);
     const organizerId = toInt(req.params.organizer_id);
     if (!organizerId) return res.status(400).json({ error: "Invalid organizer_id" });
@@ -98,13 +95,13 @@ subscriptionsRouter.delete("/organizers/:organizer_id/follow", requireAuth(), ah
         console.error("DELETE /organizers/:organizer_id/follow error:", err?.message);
         res.status(500).json({ error: "Failed to unfollow organizer" });
     }
-}));
+});
 
 /**
  * GET /me/following
  * list organizers I follow
  */
-subscriptionsRouter.get("/me/following", requireAuth(), ah(async (req, res) => {
+subscriptionsRouter.get("/me/following", requireAuth(), async (req, res) => {
     const userId = await getMysqlUserId(req);
     try {
         const [rows] = await pool.execute(
@@ -124,14 +121,14 @@ subscriptionsRouter.get("/me/following", requireAuth(), ah(async (req, res) => {
         console.error("GET /me/following error:", err?.message);
         res.status(500).json({ error: "Failed to load list of organizers I follow" });
     }
-}));
+});
 
 /**
  * GET /me/feed
  * events from organizers I follow
  * Query: ?limit=50&offset=0
  */
-subscriptionsRouter.get("/me/feed", requireAuth(), ah(async (req, res) => {
+subscriptionsRouter.get("/me/feed", requireAuth(), async (req, res) => {
     const userId = await getMysqlUserId(req);
   
     const rawLimit = toInt(req.query.limit);
@@ -156,13 +153,13 @@ subscriptionsRouter.get("/me/feed", requireAuth(), ah(async (req, res) => {
         console.error("GET /me/feed error:", err?.message);
         res.status(500).json({ error: "Failed to load feed" });
     }
-}));
+});
 
 /**
  * POST /organizers/:organizer_id/follow
  * follow an organizer
  */
-subscriptionsRouter.post("/organizers/:organizer_id/follow", requireAuth(), ah(async (req, res) => {
+subscriptionsRouter.post("/organizers/:organizer_id/follow", requireAuth(), async (req, res) => {
     const userId = await getMysqlUserId(req);
     const organizerId = toInt(req.params.organizer_id);
     if (!organizerId) return res.status(400).json({ error: "Invalid organizer_id" });
@@ -179,6 +176,6 @@ subscriptionsRouter.post("/organizers/:organizer_id/follow", requireAuth(), ah(a
         console.error("POST /organizers/:organizer_id/follow error:", err?.message);
         res.status(500).json({ error: "Failed to follow organizer" });
     }
-}));
+});
 
 module.exports = subscriptionsRouter;
