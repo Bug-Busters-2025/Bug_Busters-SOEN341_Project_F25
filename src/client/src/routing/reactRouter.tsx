@@ -10,6 +10,7 @@ import Calendar from "@/pages/Calendar";
 import ErrorBoundary from "@/pages/ErrorBoundary";
 import DashboardLayout from "@/pages/dashboard/DashboardLayout";
 import DashboardRedirect from "@/pages/dashboard/DashboardRedirect";
+import AdminAnalytics from "@/pages/dashboard/sections/AdminAnalytics";
 import OrganizerAnalytics from "@/pages/dashboard/sections/OrganizerAnalytics";
 import OrganizerEvents from "@/pages/dashboard/sections/OrganizerEvents";
 import OrganizerNotifications from "@/pages/dashboard/sections/OrganizerNotifications";
@@ -86,10 +87,19 @@ const router = createBrowserRouter([
                   ),
                },
                {
+                  id: "admin-analytics",
+                  path: "admin-analytics",
+                  element: (
+                     <ProtectedRoute allowedRoles={["admin"]}>
+                        <AdminAnalytics />
+                     </ProtectedRoute>
+                  ),
+               },
+               {
                   id: "organizer-events",
                   path: "organizer-events",
                   element: (
-                     <ProtectedRoute allowedRoles={["organizer", "admin"]}>
+                     <ProtectedRoute allowedRoles={["organizer"]}>
                         <OrganizerEvents />
                      </ProtectedRoute>
                   ),
@@ -98,7 +108,7 @@ const router = createBrowserRouter([
                   id: "analytics",
                   path: "analytics",
                   element: (
-                     <ProtectedRoute allowedRoles={["organizer", "admin"]}>
+                     <ProtectedRoute allowedRoles={["organizer"]}>
                         <OrganizerAnalytics />
                      </ProtectedRoute>
                   ),
