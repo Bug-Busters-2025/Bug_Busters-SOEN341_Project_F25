@@ -580,13 +580,6 @@ export default function Search() {
                                     {role === "student" &&
                                        event.organizer_id && (
                                           <Button
-                                             variant={
-                                                isFollowingOrganizer(
-                                                   event.organizer_id
-                                                )
-                                                   ? "outline"
-                                                   : "secondary"
-                                             }
                                              size="sm"
                                              onClick={(e) => {
                                                 e.stopPropagation();
@@ -606,7 +599,13 @@ export default function Search() {
                                              }}
                                              disabled={isLoadingFollowing}
                                              className="text-xs cursor-pointer"
-                                             variant="dashed"
+                                             variant={
+                                                isFollowingOrganizer(
+                                                   event.organizer_id
+                                                )
+                                                   ? "secondary"
+                                                   : "dashed"
+                                             }
                                           >
                                              {isFollowingOrganizer(
                                                 event.organizer_id
