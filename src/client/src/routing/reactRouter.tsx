@@ -18,7 +18,6 @@ import AdminManageUsers from "@/pages/dashboard/sections/AdminManageUsers";
 import AdminManageEvents from "@/pages/dashboard/sections/AdminManageEvents";
 import ProtectedRoute from "@/components/protectedRoutes";
 import MyTickets from "@/components/dashboard/users/MyTickets";
-import Home from "@/pages/Home";
 import ScanTicketPage from "@/pages/dashboard/sections/ScanTicketPage";
 import MySubscriptions from "@/pages/dashboard/sections/MySubscriptions";
 import MySubscriptionFeed from "@/components/dashboard/users/MySubscriptionFeed";
@@ -43,7 +42,7 @@ const router = createBrowserRouter([
       Component: RootLayout,
       errorElement: <ErrorBoundary />,
       children: [
-         { id: "home", index: true, Component: Home },
+         { id: "home", index: true, element: <Navigate to="/search" replace /> },
          {
             id: "dashboard",
             path: "dashboard",

@@ -23,12 +23,6 @@ export default function Navbar() {
 
             <div className="hidden md:flex items-center gap-6">
                <Link
-                  to="/"
-                  className="text-sm font-medium text-foreground/60 transition-colors hover:text-foreground"
-               >
-                  Home
-               </Link>
-               <Link
                   to="/search"
                   className="text-sm font-medium text-foreground/60 transition-colors hover:text-foreground"
                >
