@@ -1,10 +1,19 @@
 import { useState } from "react";
 import axios from "axios";
-import { ImageUp, X } from "lucide-react";
+import { X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useEffect } from "react";
 import { useAuth } from "@clerk/clerk-react";
+import { Textarea } from "@/components/ui/textarea";
+import {
+   Select,
+   SelectContent,
+   SelectItem,
+   SelectTrigger,
+   SelectValue,
+} from "@/components/ui/select";
+import { DateTimePicker } from "@/components/DateTimePicker";
 
 interface CreateEventModalProps {
    open: boolean;
@@ -32,7 +41,7 @@ export default function CreateEventModal({
       eventDate: "",
       location: "",
       ticket_capacity: "",
-      ticket_type: "Free",
+      ticket_type: "free",
    });
 
    const { getToken } = useAuth();
@@ -65,7 +74,7 @@ export default function CreateEventModal({
                eventDate: "",
                location: "",
                ticket_capacity: "",
-               ticket_type: "Free",
+               ticket_type: "free",
             });
          }
       }
@@ -205,42 +214,50 @@ export default function CreateEventModal({
                {isEditMode ? "Edit Event" : "Create Event"}
             </h2>
             <div className="flex flex-col gap-3">
-               <Input
-                  name="title"
-                  placeholder="Event Title"
-                  value={form.title}
-                  onChange={handleChange}
-               />
-               <textarea
+               <div className="space-y-1">
+                  <Input
+                     name="title"
+                     placeholder="Event Title"
+                     value={form.title}
+                     onChange={handleChange}
+                     maxLength={50}
+                  />
+                  <div className="flex justify-end">
+                     <span className="text-xs text-muted-foreground">
+                        {form.title.length}/50
+                     </span>
+                  </div>
+               </div>
+               <Textarea
                   name="description"
                   placeholder="Event description "
                   value={form.description}
                   onChange={handleChange}
                   rows={3}
+                  maxLength={100}
                   className="border border-border rounded-md p-2 text-sm bg-background
                      text-foreground placeholder:text-muted-foreground resize-none focus:outline-none focus:ring-2 focus:ring-primary"
                />
 
-               <select
-                  id="category"
-                  name="category"
-                  value={form.category}
-                  onChange={handleChange}
-                  className="
-                    w-full border border-border rounded-md bg-card text-foreground px-3 py-2
-                    focus:outline-none focus:ring-2 focus:ring-primary hover:border-primary
-                    transition-all duration-200
-                    "
+               <Select
+                  onValueChange={(value) =>
+                     setForm({ ...form, category: value })
+                  }
+                  value={form.category || ""}
                >
-                  <option value="">Select a category</option>
-                  <option value="Technology">Technology</option>
-                  <option value="Music">Music</option>
-                  <option value="Academic">Academic</option>
-                  <option value="Sports">Sports</option>
-                  <option value="Arts">Arts</option>
-                  <option value="Career">Career</option>
-                  <option value="Environment">Environment</option>
-               </select>
+                  <SelectTrigger className="w-full">
+                     <SelectValue placeholder="Select a category" />
+                  </SelectTrigger>
+                  <SelectContent>
+                     <SelectItem value="Technology">Technology</SelectItem>
+                     <SelectItem value="Music">Music</SelectItem>
+                     <SelectItem value="Academic">Academic</SelectItem>
+                     <SelectItem value="Sports">Sports</SelectItem>
+                     <SelectItem value="Arts">Arts</SelectItem>
+                     <SelectItem value="Career">Career</SelectItem>
+                     <SelectItem value="Environment">Environment</SelectItem>
+                  </SelectContent>
+               </Select>
 
                <Input
                   name="imageUrl"
@@ -249,18 +266,12 @@ export default function CreateEventModal({
                   onChange={handleChange}
                />
                <div className="space-y-2">
-                  <label
-                     htmlFor="event_date"
-                     className="text-sm font-medium text-foreground pl-2"
-                  >
-                     Event Date & Time
-                  </label>
-
-                  <Input
-                     type="datetime-local"
-                     name="eventDate"
+                  <DateTimePicker
                      value={form.eventDate}
-                     onChange={handleChange}
+                     onChange={(dateTime) =>
+                        setForm({ ...form, eventDate: dateTime })
+                     }
+                     placeholder="Select event date and time"
                   />
                </div>
 
@@ -279,34 +290,21 @@ export default function CreateEventModal({
                   onChange={handleChange}
                   className="[appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
                />
-
-               <select
-                  id="ticket_type"
-                  name="ticket_type"
-                  value={form.ticket_type}
-                  onChange={handleChange}
-                  className="
-                        w-full
-                        border
-                        border-border
-                        rounded-md
-                        bg-card
-                        text-foreground
-                        px-3
-                        py-2
-                        :outline-none
-                        focus:ring-2
-                        focus:ring-primary
-                        focus:ring-offset-1
-                        hover:border-primary
-                        transition-all
-                        duration-20
-                        "
+               <Select
+                  onValueChange={(value) =>
+                     setForm({ ...form, ticket_type: value })
+                  }
+                  value={form.ticket_type || "free"}
+                  disabled={isEditMode}
                >
-                  <option value="">Select a ticket type</option>
-                  <option value="free">Free</option>
-                  <option value="paid">Paid</option>
-               </select>
+                  <SelectTrigger className="w-full">
+                     <SelectValue placeholder="Select a ticket type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                     <SelectItem value="free">Free</SelectItem>
+                     <SelectItem value="paid">Paid</SelectItem>
+                  </SelectContent>
+               </Select>
 
                {message && (
                   <p className="text-sm center text-red-500 text-center mt-3">
