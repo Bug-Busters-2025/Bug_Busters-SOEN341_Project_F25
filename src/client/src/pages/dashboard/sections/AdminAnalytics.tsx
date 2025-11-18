@@ -3,18 +3,23 @@ import {
    ClipboardList,
    Calendar,
    Users,
-   User,
    TrendingUp,
    Ticket,
 } from "lucide-react";
 import AnalyticsCard from "@/components/dashboard/organizer/AnalyticsCard";
 import AnalyticsSection from "@/components/dashboard/organizer/AnalyticsSection";
-import EventCard from "@/components/ui/EventCard";
 import EventOverviewCard from "@/components/ui/EventOverviewCard";
 import CalendarUi from "@/components/CalendarUi";
 import { type Event } from "@/data/events";
 import axios from "axios";
-import { useRole } from "@/hooks/useRole";
+import { useAuth } from "@clerk/clerk-react";
+import {
+   Select,
+   SelectContent,
+   SelectItem,
+   SelectTrigger,
+   SelectValue,
+} from "@/components/ui/select";
 
 type Summary = {
    events: number;
@@ -33,26 +38,25 @@ export default function AdminAnalytics() {
    const calendarRef = useRef<HTMLDivElement | null>(null);
    const [events, setEvents] = useState<Event[]>([]);
    const [loading, setLoading] = useState(true);
+   const [selectedEventId, setSelectedEventId] = useState<string>("all");
 
    const [summary, setSummary] = useState<Summary | null>(null);
    const [trend, setTrend] = useState<ParticipationPoint[]>([]);
    const [loadingStats, setLoadingStats] = useState(true);
 
-   const { role } = useRole();
+   const { getToken } = useAuth();
 
    useEffect(() => {
-      const fetchAll = async () => {
+      const fetchEvents = async () => {
          try {
             setLoading(true);
-            setLoadingStats(true);
-
-            const [eventsRes, summaryRes, trendRes] = await Promise.all([
-               axios.get("http://localhost:3000/api/v1/events"),
-               axios.get("http://localhost:3000/api/v1/analytics/summary"),
-               axios.get(
-                  "http://localhost:3000/api/v1/analytics/participation"
-               ),
-            ]);
+            const token = await getToken();
+            const eventsRes = await axios.get(
+               "http://localhost:3000/api/v1/events/admin/all",
+               {
+                  headers: token ? { Authorization: `Bearer ${token}` } : {},
+               }
+            );
 
             const transformedEvents: Event[] = eventsRes.data.map(
                (event: any) => ({
@@ -73,20 +77,48 @@ export default function AdminAnalytics() {
             );
 
             setEvents(transformedEvents);
+         } catch {
+            setEvents([]);
+         } finally {
+            setLoading(false);
+         }
+      };
+
+      fetchEvents();
+   }, [getToken]);
+
+   useEffect(() => {
+      const fetchStats = async () => {
+         try {
+            setLoadingStats(true);
+
+            const summaryUrl =
+               selectedEventId === "all"
+                  ? "http://localhost:3000/api/v1/analytics/summary"
+                  : `http://localhost:3000/api/v1/analytics/summary?event_id=${selectedEventId}`;
+
+            const trendUrl =
+               selectedEventId === "all"
+                  ? "http://localhost:3000/api/v1/analytics/participation"
+                  : `http://localhost:3000/api/v1/analytics/participation?event_id=${selectedEventId}`;
+
+            const [summaryRes, trendRes] = await Promise.all([
+               axios.get(summaryUrl),
+               axios.get(trendUrl),
+            ]);
+
             setSummary(summaryRes.data as Summary);
             setTrend(trendRes.data as ParticipationPoint[]);
          } catch {
-            setEvents([]);
             setSummary({ events: 0, tickets: 0, participationRate: 0 });
             setTrend([]);
          } finally {
-            setLoading(false);
             setLoadingStats(false);
          }
       };
 
-      fetchAll();
-   }, []);
+      fetchStats();
+   }, [selectedEventId]);
 
    const totals = useMemo(() => {
       const totalIssued = trend.reduce((a, b) => a + (b.issued || 0), 0);
@@ -107,13 +139,38 @@ export default function AdminAnalytics() {
          id="dsh-admin-analytics"
          className="h-full w-full flex flex-col p-6 md:p-10 gap-10 bg-gradient-to-br from-background via-muted/20 to-background overflow-auto"
       >
-         <div className="flex flex-col justify-left space-y-2">
-            <h1 className="text-4xl font-bold tracking-tight text-secondary-foreground">
-               My Analytics
-            </h1>
-            <p className="text-muted-foreground text-lg">
-               Track performance and insights for your events
-            </p>
+         <div className="flex flex-col justify-left space-y-4">
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+               <div>
+                  <h1 className="text-4xl font-bold tracking-tight text-secondary-foreground">
+                     Platform Analytics
+                  </h1>
+                  <p className="text-muted-foreground text-lg">
+                     Track performance and insights across all events
+                  </p>
+               </div>
+               <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+                  <label className="text-sm font-medium text-foreground whitespace-nowrap">
+                     Filter by event:
+                  </label>
+                  <Select
+                     value={selectedEventId}
+                     onValueChange={setSelectedEventId}
+                  >
+                     <SelectTrigger className="w-full sm:w-[250px]">
+                        <SelectValue placeholder="Select an event" />
+                     </SelectTrigger>
+                     <SelectContent>
+                        <SelectItem value="all">All Events</SelectItem>
+                        {events.map((event) => (
+                           <SelectItem key={event.id} value={event.id}>
+                              {event.title}
+                           </SelectItem>
+                        ))}
+                     </SelectContent>
+                  </Select>
+               </div>
+            </div>
          </div>
 
          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -237,8 +294,8 @@ export default function AdminAnalytics() {
          </AnalyticsSection>
 
          <AnalyticsSection
-            title="Upcoming Events"
-            subtitle="Your scheduled events for the next 30 days"
+            title="All Events"
+            subtitle="All events across the platform"
             sectionId="upcoming-events"
             icon={<Calendar className="h-6 w-6" />}
          >
@@ -260,7 +317,7 @@ export default function AdminAnalytics() {
                   <div className="rounded-lg border border-border/50 p-6 bg-card/50 backdrop-blur-sm h-full">
                      <div className="mb-4">
                         <h3 className="text-lg font-semibold text-foreground">
-                           Upcoming Events
+                           All Events
                         </h3>
                         <p className="text-sm text-muted-foreground">
                            Scroll to see all events
@@ -280,7 +337,7 @@ export default function AdminAnalytics() {
                            ))
                         ) : (
                            <p className="text-center text-muted-foreground py-8">
-                              You have no events in your timeline
+                              No events found
                            </p>
                         )}
                      </div>
@@ -288,21 +345,6 @@ export default function AdminAnalytics() {
                </div>
             </div>
          </AnalyticsSection>
-
-         {role === "organizer" && (
-            <AnalyticsSection
-               title="My Subscribers"
-               subtitle="View your subscriber list"
-               sectionId="my-subscibers"
-               icon={<User className="h-6 w-6" />}
-            >
-               <div className="rounded-lg border border-border/50 p-8 bg-card/50 backdrop-blur-sm text-center">
-                  <p className="text-muted-foreground">
-                     Subscriber management coming soon...
-                  </p>
-               </div>
-            </AnalyticsSection>
-         )}
       </div>
    );
 }
