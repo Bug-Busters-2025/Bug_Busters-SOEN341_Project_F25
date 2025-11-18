@@ -1,4 +1,4 @@
-import { createBrowserRouter } from "react-router";
+import { createBrowserRouter, Navigate } from "react-router";
 import { SignIn, SignUp } from "@clerk/clerk-react";
 import { dark } from "@clerk/themes";
 import AuthCentered from "@/components/AuthCentered";
@@ -20,6 +20,9 @@ import ProtectedRoute from "@/components/protectedRoutes";
 import MyTickets from "@/components/dashboard/users/MyTickets";
 import Home from "@/pages/Home";
 import ScanTicketPage from "@/pages/dashboard/sections/ScanTicketPage";
+import MySubscriptions from "@/pages/dashboard/sections/MySubscriptions";
+import MySubscriptionFeed from "@/components/dashboard/users/MySubscriptionFeed";
+import MySubscriptionsFollowing from "@/components/dashboard/users/MySubscriptionsFollowing";
 
 const authAppearance = {
    baseTheme: dark,
@@ -121,6 +124,20 @@ const router = createBrowserRouter([
                         <OrganizerNotifications />
                      </ProtectedRoute>
                   ),
+               },
+               {
+                  id: "subscriptions",
+                  path: "subscriptions",
+                  element: (
+                     <ProtectedRoute allowedRoles={["student", "organizer"]}>
+                        <MySubscriptions />
+                     </ProtectedRoute>
+                  ),
+                  children: [
+                    { index: true, element: <Navigate to="feed" replace /> },
+                    { id: "subs-event-feed", path: "feed", Component: MySubscriptionFeed },
+                    { id: "subs-subscriptions", path: "following", Component: MySubscriptionsFollowing }
+                  ]
                },
             ],
          },

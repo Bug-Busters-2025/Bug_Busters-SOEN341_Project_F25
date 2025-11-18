@@ -6,15 +6,17 @@ import { useRole } from "@/hooks/useRole";
 export default function DashboardSidemenu() {
   const { role } = useRole();
 
-  const organizerNavItems = [
-    { to: "./organizer-events", icon: Calendar, label: "My Events" },
-    { to: "./analytics", icon: BarChart3, label: "Analytics" },
-    { to: "./notifications", icon: Bell, label: "Notifications" },
-  ];
+   const organizerNavItems = [
+      { to: "./organizer-events", icon: Calendar, label: "My Events" },
+      { to: "./analytics", icon: BarChart3, label: "Analytics" },
+      { to: "./notifications", icon: Bell, label: "Notifications" },
+      { to: "./subscriptions", icon: Users, label: "My Subscriptions"},
+   ];
 
-  const studentNavItems = [
-    { to: "./my-tickets", icon: Ticket, label: "My Tickets", end: true },
-  ];
+   const studentNavItems = [
+      { to: "./my-tickets", icon: Ticket, label: "My Tickets", end: true},
+      { to: "./subscriptions", icon: Users, label: "My Subscriptions" }
+   ];
 
   const adminNavItems = [
     { to: "./admin", icon: Users, label: "Manage Users" },
