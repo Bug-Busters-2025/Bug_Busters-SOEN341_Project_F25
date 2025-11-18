@@ -85,12 +85,12 @@ subscriptionsRouter.delete("/organizers/:organizer_id/follow", requireAuth(), as
     try {
         const [result] = await pool.execute(
             `DELETE FROM organizer_subscriptions
-            WHERE user_id = ? AND organizer_id = ?`,
+             WHERE user_id = ? AND organizer_id = ?`,
             [userId, organizerId]
         );
 
-        if (result.affectedRows > 0) return res.status(204).send();
-        return res.status(200).json({ followed: false, deleted: false });
+        const removed = result.affectedRows > 0;
+        return res.status(200).json({ removed });
     } catch (err) {
         console.error("DELETE /organizers/:organizer_id/follow error:", err?.message);
         res.status(500).json({ error: "Failed to unfollow organizer" });

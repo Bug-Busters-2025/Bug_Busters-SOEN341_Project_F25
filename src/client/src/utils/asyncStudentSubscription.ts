@@ -2,6 +2,7 @@ import axios from "axios";
 import type {
     FollowOrganizerResponse,
     FollowingListResponse,
+    UnfollowOrganizerResponse,
     FeedResponse
 } from "@/types/subscription";
 
@@ -17,13 +18,13 @@ export async function followOrganizer(organizerId: number): Promise<FollowOrgani
     return res.data;
 }
 
-export async function unfollowOrganizer(organizerId: number): Promise<void> {
-    const res = await api.delete(`/organizers/${organizerId}/follow`);
+export async function unfollowOrganizer(organizerId: number): Promise<UnfollowOrganizerResponse> {
+    const res = await api.delete<UnfollowOrganizerResponse>(`/organizers/${organizerId}/follow`);
 
-    if (res.status === 204) return;
     if (res.status < 200 || res.status >= 300) {
         throw new Error(`Unfollow failed: ${res.status}`);
     }
+    return res.data;
 }
 
 export async function getFollowing(): Promise<FollowingListResponse> {

@@ -4,6 +4,8 @@ import type { SubscriptionContextType } from "@/types/subscription";
 export default function MySubscriptionsFollowing() {
     const { organizers, onUnfollow } = 
         useOutletContext<SubscriptionContextType>();
+
+    console.log("Org: ", organizers[0])
     
     return (
         <section>

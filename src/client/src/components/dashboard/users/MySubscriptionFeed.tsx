@@ -56,7 +56,7 @@ export default function MySubscriptionFeed() {
                                 onClick={() => handleClick(org.organizer_id)}
                             >
                                 <CardContent className="p-3 flex flex-col justify-center text-center">
-                                    <span className="text-sm font-medium">{org.organizer_email}</span>
+                                    <span className="text-sm font-medium">{org.organizer_name}</span>
                                     <span className="text-xs text-neutral-400">{orgEventCount} Events</span>
                                 </CardContent>
                             </Card>

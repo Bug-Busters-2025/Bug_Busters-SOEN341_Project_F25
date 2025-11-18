@@ -9,7 +9,7 @@ export interface UserSummary {
 export interface OrganizerSummary {
     organizer_id: number;
     organizer_name: string;
-    organizer_email: string;
+    email: string;
 }
 
 export interface OrganizerSubscription {
