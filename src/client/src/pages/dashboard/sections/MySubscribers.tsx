@@ -66,6 +66,22 @@ export default function MySubscribers() {
     };
   }, [userId, userLoading]);
 
+  const handleRemoveFollower = async (followerId: number) => {
+    if (!userId) return;
+    try {
+      setRemovingId(followerId);
+      setError(null);
+
+      await removeOrganizerSubscriber(userId, followerId);
+
+      setFollowers((prev) => prev.filter((f) => f.user_id !== followerId));
+    } catch (e: any) {
+      setError(e?.message ?? "Failed to remove subscriber");
+    } finally {
+      setRemovingId(null);
+    }
+  };
+
   if (loading || userLoading) {
     return (
       <div id="dsh-my-subscribers">
@@ -116,6 +132,17 @@ export default function MySubscribers() {
                     {"followed_at" in follower && follower.followed_at
                       ? new Date(follower.followed_at).toLocaleDateString()
                       : "—"}
+                  </TableCell>
+                  <TableCell className="text-right align-middle">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      aria-label="Remove subscriber"
+                      disabled={removingId === follower.user_id}
+                      onClick={() => handleRemoveFollower(follower.user_id)}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
                   </TableCell>
                 </TableRow>
               ))}
