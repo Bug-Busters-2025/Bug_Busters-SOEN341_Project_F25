@@ -10,6 +10,7 @@ export default function DashboardSidemenu() {
       { to: "./organizer-events", icon: Calendar, label: "My Events" },
       { to: "./analytics", icon: BarChart3, label: "Analytics" },
       { to: "./notifications", icon: Bell, label: "Notifications" },
+      { to: "./subscribers", icon: Users, label: "My Subscribers" },
       { to: "./subscriptions", icon: Users, label: "My Subscriptions"},
    ];
 
@@ -24,7 +25,7 @@ export default function DashboardSidemenu() {
     { to: "./admin-analytics", icon: BarChart3, label: "Analytics" },
   ];
 
-  const effectiveRole = role ?? "student"; // <- default so My Tickets shows
+  const effectiveRole = role ?? "student";
   const navItems =
     effectiveRole === "student"
       ? studentNavItems
