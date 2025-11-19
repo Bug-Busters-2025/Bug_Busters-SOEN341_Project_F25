@@ -4,6 +4,7 @@ export interface UserSummary {
     user_id: number;
     name: string;
     email: string;
+    followed_at: string;
 }
 
 export interface OrganizerSummary {
