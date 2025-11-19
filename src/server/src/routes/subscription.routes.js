@@ -31,7 +31,11 @@ subscriptionsRouter.get("/organizers/:organizer_id/followers", requireAuth(), as
 
     try {
         const [rows] = await pool.execute(
-            `SELECT u.id, u.name, u.email
+            `SELECT
+                u.id          AS user_id,
+                u.name,
+                u.email,
+            os.created_at AS followed_at
             FROM organizer_subscriptions AS os
             JOIN users AS u ON u.id = os.user_id
             WHERE os.organizer_id = ?
@@ -51,25 +55,31 @@ subscriptionsRouter.get("/organizers/:organizer_id/followers", requireAuth(), as
  * remove a specific subscriber from an organizer
  */
 subscriptionsRouter.delete("/organizers/:organizer_id/subscribers/:user_id", requireAuth(), async (req, res) => {
-    const userId = await getMysqlUserId(req);
-
-    const organizerId = toInt(req.params.organizer_id);
-    const subscriberId = toInt(req.params.user_id);
-    if (!organizerId || !subscriberId) return res.status(400).json({ error: "Invalid organizer_id or user_id" });
-    if (me.role !== "organizer") return res.status(403).json({ error: "Only organizers can remove subscribers" });
-
     try {
+        const currentUserId = await getMysqlUserId(req);
+        const organizerId = toInt(req.params.organizer_id);
+        const subscriberId = toInt(req.params.user_id);
+
+        if (!organizerId || !subscriberId) {
+            return res.status(400).json({ error: "Invalid organizer_id or user_id" });
+        }
+        if (currentUserId !== organizerId) {
+            return res.status(403).json({ error: "Only this organizer can remove subscribers" });
+        }
+
         const [result] = await pool.execute(
             `DELETE FROM organizer_subscriptions
             WHERE organizer_id = ? AND user_id = ?`,
             [organizerId, subscriberId]
         );
 
-        if (result.affectedRows > 0) return res.status(204).send();
+        if (result.affectedRows > 0) {
+            return res.status(204).send();
+        }
         return res.status(404).json({ error: "Subscription not found" });
     } catch (err) {
-        console.error("DELETE /organizers/:organizer_id/subscribers/:user_id error:", err?.message);
-        res.status(500).json({ error: "Failed to remove subscriber" });
+        console.error("DELETE /organizers/:organizer_id/subscribers/:user_id error:", err);
+        return res.status(500).json({ error: "Failed to remove subscriber" });
     }
 });
 
