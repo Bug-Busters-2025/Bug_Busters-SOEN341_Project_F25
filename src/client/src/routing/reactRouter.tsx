@@ -23,6 +23,7 @@ import ScanTicketPage from "@/pages/dashboard/sections/ScanTicketPage";
 import MySubscriptions from "@/pages/dashboard/sections/MySubscriptions";
 import MySubscriptionFeed from "@/components/dashboard/users/MySubscriptionFeed";
 import MySubscriptionsFollowing from "@/components/dashboard/users/MySubscriptionsFollowing";
+import MySubscribers from "@/pages/dashboard/sections/MySubscribers"
 
 const authAppearance = {
    baseTheme: dark,
@@ -122,6 +123,15 @@ const router = createBrowserRouter([
                   element: (
                      <ProtectedRoute allowedRoles={["organizer"]}>
                         <OrganizerNotifications />
+                     </ProtectedRoute>
+                  ),
+               },
+               {
+                  id: "my-subscribers",
+                  path: "subscribers",
+                  element: (
+                     <ProtectedRoute allowedRoles={["organizer"]}>
+                        <MySubscribers />
                      </ProtectedRoute>
                   ),
                },
