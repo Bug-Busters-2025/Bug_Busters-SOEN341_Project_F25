@@ -28,7 +28,7 @@ export default function StudentSubscription() {
     const navigate = useNavigate();
 
     const [loading, setLoading] = useState<boolean>(true);
-    const [error, setError] = useState<string | null>(null);
+    const [_, setError] = useState<string | null>(null);
 
     const [subscriptions, setSubscriptions] = useState<OrganizerSummary[]>([]);
     const [subscriptionEvents, setSubscriptionEvents] = useState<Event[]>([]);
