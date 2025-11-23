@@ -1,17 +1,8 @@
-// export interface Ticket {
-//     id: number;
-//     event_id: number;
-//     user_id: number;
-//     status: "claimed" | "waitlisted";
-//     checked_in: boolean;
-//     created_at: string;
-// }
-
 export type TicketStatus = "claimed" | "waitlisted";
 export type TicketType = "free" | "paid";
 
 export interface Ticket {
-   ticket_id: number; // ticket_id
+   ticket_id: number;
    status: TicketStatus;
    checkedIn: boolean;
    createdAt: string;
@@ -85,3 +76,16 @@ export type TicketSummary = {
    waitlisted: number;
    checked_in: number;
 };
+
+export interface ParticipationPointResponse {
+   date: string;
+   eventTitle: string;
+   issued: number;
+   checkedIn: number; 
+}
+
+export interface AnalyticsSummaryResponse {
+   events: number;
+   tickets: number;
+   participationRate: number;
+}

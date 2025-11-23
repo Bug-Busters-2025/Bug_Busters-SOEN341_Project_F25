@@ -3,6 +3,7 @@ import {
    ClipboardList,
    Calendar,
    Users,
+   User,
    TrendingUp,
    Ticket,
 } from "lucide-react";
@@ -10,22 +11,20 @@ import AnalyticsCard from "@/components/dashboard/organizer/AnalyticsCard";
 import AnalyticsSection from "@/components/dashboard/organizer/AnalyticsSection";
 import EventOverviewCard from "@/components/ui/EventOverviewCard";
 import CalendarUi from "@/components/CalendarUi";
-import { type Event } from "@/data/events";
-import axios from "axios";
-import { useUserId } from "@/hooks/useUserId";
 
-type Summary = {
-   events: number;
-   tickets: number;
-   participationRate: number;
-};
+import type { Event } from "@/types/event";
+import {
+   fetchEvents,
+   fetchAnalyticsSummary,
+   fetchParticipationTrend,
+} from "@/utils/asyncOrganizerAnalytics";
+import type { 
+    AnalyticsSummaryResponse,
+    ParticipationPointResponse
+} from "@/types/tickets";
 
-type ParticipationPoint = {
-   date: string;
-   eventTitle: string;
-   issued: number;
-   checkedIn: number;
-};
+type Summary = AnalyticsSummaryResponse;
+type ParticipationPoint = ParticipationPointResponse;
 
 export default function OrganizerAnalytics() {
    const calendarRef = useRef<HTMLDivElement | null>(null);
@@ -36,50 +35,23 @@ export default function OrganizerAnalytics() {
    const [trend, setTrend] = useState<ParticipationPoint[]>([]);
    const [loadingStats, setLoadingStats] = useState(true);
 
-   const { userId, loading: userIdLoading } = useUserId();
-
    useEffect(() => {
-      if (userIdLoading || !userId) {
-         return;
-      }
-
       const fetchAll = async () => {
          try {
             setLoading(true);
             setLoadingStats(true);
 
             const [eventsRes, summaryRes, trendRes] = await Promise.all([
-               axios.get(
-                  `http://localhost:3000/api/v1/events/organizer/${userId}`
-               ),
-               axios.get(
-                  `http://localhost:3000/api/v1/analytics/summary?organizer_id=${userId}`
-               ),
-               axios.get(
-                  `http://localhost:3000/api/v1/analytics/participation?organizer_id=${userId}`
-               ),
+               fetchEvents(),
+               fetchAnalyticsSummary(),
+               fetchParticipationTrend(),
             ]);
 
-            const transformedEvents: Event[] = eventsRes.data.map(
-               (event: any) => ({
-                  id: event.id.toString(),
-                  title: event.title,
-                  description: event.description,
-                  event_date: (event.event_date || "").toString().split(" ")[0],
-                  location: event.location,
-                  category: event.category,
-                  organizer: event.organizer_name || "Unknown",
-                  imageUrl: event.imageUrl || " ",
-                  ticket_type: event.ticket_type,
-                  ticket_capacity: event.ticket_capacity,
-                  remaining_tickets: event.remaining_tickets,
-               })
-            );
-
-            setEvents(transformedEvents);
-            setSummary(summaryRes.data as Summary);
-            setTrend(trendRes.data as ParticipationPoint[]);
-         } catch {
+            setEvents(eventsRes);
+            setSummary(summaryRes);
+            setTrend(trendRes);
+         } catch (err) {
+            console.error("Error loading dashboard data:", err);
             setEvents([]);
             setSummary({ events: 0, tickets: 0, participationRate: 0 });
             setTrend([]);
@@ -90,11 +62,18 @@ export default function OrganizerAnalytics() {
       };
 
       fetchAll();
-   }, [userId, userIdLoading]);
+   }, []);
+
+   useEffect(() => {
+
+   },[]);
 
    const totals = useMemo(() => {
       const totalIssued = trend.reduce((a, b) => a + (b.issued || 0), 0);
-      const totalCheckedIn = trend.reduce((a, b) => a + (b.checkedIn || 0), 0);
+      const totalCheckedIn = trend.reduce(
+         (a, b) => a + (b.checkedIn || 0),
+         0
+      );
       const eventCount = summary?.events ?? 0;
       const avgPerEvent =
          eventCount > 0 ? Math.round(totalCheckedIn / eventCount) : 0;
@@ -108,7 +87,7 @@ export default function OrganizerAnalytics() {
 
    return (
       <div
-         id="dsh-organizer-analytics"
+         id="dsh-org-analytics"
          className="h-full w-full flex flex-col p-6 md:p-10 gap-10 bg-gradient-to-br from-background via-muted/20 to-background overflow-auto"
       >
          <div className="flex flex-col justify-left space-y-2">
@@ -119,7 +98,6 @@ export default function OrganizerAnalytics() {
                Track performance and insights for your events
             </p>
          </div>
-
          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             <AnalyticsCard
                title="Total Events"
@@ -132,7 +110,6 @@ export default function OrganizerAnalytics() {
                <span className="text-green-500 font-semibold">+12%</span> from
                last month
             </AnalyticsCard>
-
             <AnalyticsCard
                title="Avg Attendees/Event"
                icon={<Users className="h-5 w-5 text-secondary-foreground" />}
@@ -141,7 +118,6 @@ export default function OrganizerAnalytics() {
             >
                est. based on check-ins
             </AnalyticsCard>
-
             <AnalyticsCard
                title="Total Attendees (est.)"
                icon={
@@ -152,7 +128,6 @@ export default function OrganizerAnalytics() {
             >
                {participationPct}% participation
             </AnalyticsCard>
-
             <AnalyticsCard
                title="Total Tickets Issued"
                icon={<Ticket className="h-5 w-5 text-secondary-foreground" />}
@@ -239,7 +214,6 @@ export default function OrganizerAnalytics() {
                </table>
             </div>
          </AnalyticsSection>
-
          <AnalyticsSection
             title="Upcoming Events"
             subtitle="Your scheduled events for the next 30 days"
@@ -290,6 +264,18 @@ export default function OrganizerAnalytics() {
                      </div>
                   </div>
                </div>
+            </div>
+         </AnalyticsSection>
+         <AnalyticsSection
+            title="My Subscribers"
+            subtitle="View your subscriber list"
+            sectionId="my-subscibers"
+            icon={<User className="h-6 w-6" />}
+         >
+            <div className="rounded-lg border border-border/50 p-8 bg-card/50 backdrop-blur-sm text-center">
+               <p className="text-muted-foreground">
+                  Subscriber management coming soon...
+               </p>
             </div>
          </AnalyticsSection>
       </div>

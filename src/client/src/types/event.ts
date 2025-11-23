@@ -1,3 +1,7 @@
+import { type TicketType } from "./tickets";
+
+export type EventApiStatus = "PUBLISHED" | "DELETED" | string;
+
 export interface Event {
    id: number;
    title: string;
@@ -8,10 +12,10 @@ export interface Event {
    organizer_id?: number;
    category: string;
    ticket_capacity: number;
-   ticket_type: "free" | "paid";
+   ticket_type: TicketType;
    imageUrl: string;
    remaining_tickets: number;
-   time: string;
+   status?: EventApiStatus;
 }
 
 export interface EventWithOrganizer extends Event {
