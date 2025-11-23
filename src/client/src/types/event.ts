@@ -8,7 +8,7 @@ export interface Event {
    description: string;
    event_date: string;
    location: string;
-   organizer: string;
+   organizer_name: string;
    organizer_id?: number;
    category: string;
    ticket_capacity: number;
@@ -16,6 +16,7 @@ export interface Event {
    imageUrl: string;
    remaining_tickets: number;
    status?: EventApiStatus;
+   time: string;
 }
 
 export interface EventWithOrganizer extends Event {

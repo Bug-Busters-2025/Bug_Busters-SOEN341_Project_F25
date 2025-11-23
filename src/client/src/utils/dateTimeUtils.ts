@@ -87,6 +87,20 @@ const monthsOfYear: string[] = [
    "December",
 ];
 
+function getMonthYear(d: Date) {
+   return { month: d.getMonth(), year: d.getFullYear() };
+}
+   
+function getLastMonthRef(now: Date): { month: number; year: number } {
+   const prev = new Date(now);
+   prev.setMonth(now.getMonth() - 1);
+   return getMonthYear(prev);
+}
+
+function isSameMonthYear(d: Date, month: number, year: number): boolean {
+   return d.getMonth() === month && d.getFullYear() === year;
+}
+
 export {
    formatDate,
    getFormattedTime,
@@ -99,4 +113,7 @@ export {
    weekDays,
    weekDaysAbreviated,
    monthsOfYear,
+   getMonthYear,
+   getLastMonthRef,
+   isSameMonthYear
 };
