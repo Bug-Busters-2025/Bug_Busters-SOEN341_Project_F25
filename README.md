@@ -94,7 +94,143 @@ To maintain consistency across the project, we follow these naming conventions:
 
 - Constants: `UPPER_CASE`
 
-## Installation & Setup -NEEDED
+## Installation & Setup 
+
+This section explains how to install, configure, and run the project locally for development.  
+Since this is a web application, these steps are intended for developers setting up the system on their machine.
+
+---
+
+### 1. Prerequisites
+
+Ensure the following are installed:
+
+- **Node.js** (v18+ recommended)  
+- **npm**  
+- **MySQL Server** (8.0+)  
+- **Git**  
+- Clerk account (for authentication keys)
+
+---
+
+### 2. Clone the Repository
+
+```bash
+git clone https://github.com/Bug-Busters-2025/Bug_Busters-SOEN341_Project_F25.git
+```
+---
+
+### 3. Install Dependencies
+
+#### Frontend (root)
+```bash
+cd src/client
+npm install
+cd ../..
+```
+
+#### Backend (/server)
+```bash
+cd src/server
+npm install
+cd ../..
+```
+
+---
+
+### 4. Database Setup (MySQL)
+
+The SQL schema is located at:
+
+```
+src/server/src/sql/db.sql
+```
+
+To set up the database:
+
+1. Create a MySQL database named **bugbusters**  
+2. **Import `src/server/src/sql/db.sql`** using any MySQL tool  
+3. Confirm all tables were created successfully  
+
+
+---
+### 5. Environment Variables
+
+Both backend and frontend require `.env` files.
+
+---
+
+#### Root `.env` (Frontend + Clerk)
+
+Create a `.env` in the **project root**:
+
+```bash
+touch .env
+```
+
+Add:
+
+```
+VITE_CLERK_PUBLISHABLE_KEY=pk_test_ZXhwZXJ0LW1hbnRpcy0xMC5jbGVyay5hY2NvdW50cy5kZXYk
+CLERK_PUBLISHABLE_KEY=pk_test_ZXhwZXJ0LW1hbnRpcy0xMC5jbGVyay5hY2NvdW50cy5kZXYk
+CLERK_SECRET_KEY=sk_test_vBd0hdkVjkIxGDN7XdlZgv7laUULOjNpoLV6Fs4Ywy
+```
+
+
+---
+
+#### Backend `.env` (inside `/server`)
+
+Create:
+
+```bash
+cd server
+touch .env
+```
+
+Add:
+
+```
+DB_HOST=localhost
+DB_USER=root
+DB_PASSWORD=
+DB_NAME=bugbusters
+DB_PORT=3307
+PORT=3000
+```
+
+Return to root
+
+---
+
+### 6. Run the Project Locally
+
+#### Start Backend
+```bash
+cd src/server/src
+npm run dev
+cd ../../..
+```
+
+Backend runs at:
+```
+http://localhost:3000
+```
+
+#### Start Frontend
+```bash
+cd src/client/src
+npm run dev
+```
+
+Frontend runs at:
+```
+http://localhost:5173
+```
+
+---
+
+
 
 ## User Guide
 
@@ -160,6 +296,12 @@ To maintain consistency across the project, we follow these naming conventions:
 
 #### Manage Roles & Organizations (US12)
 - Use **Admin User Management** to promote/demote users.
+
+## Architecture Diagram
+
+The system architecture is documented here:
+
+[Architecture Diagram](Documentation/Architecture/Bugbuster-Architecture-updated.png)
 
 ## Testing Documentation
 See the full testing report here:  
