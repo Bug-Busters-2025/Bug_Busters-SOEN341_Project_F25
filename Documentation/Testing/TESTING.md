@@ -37,10 +37,8 @@ Run all tests:
 
 Latest test run summary (for implemented stories US01–US12):  NEEDS UPDATING
 
-Test Suites: 11 passed, 0 failed
-Tests: 34 passed
-
-User stories US13–US15 are not yet implemented and therefore have no automated tests.
+Test Suites: 16 passed, 0 failed, 16 total
+Tests: 57 passed, 57 total
 
 ---
 
