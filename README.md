@@ -251,11 +251,15 @@ http://localhost:5173
 #### Digital Tickets (US04)
 - Access **My Tickets** to view QR-coded tickets for check-in.
 
-#### Subscribe to Organizers (US13) -TO BE REWORKED
-- On an organizer/event page, click **Subscribe**.
+#### Subscribe to Organizers (US13)
+- In the **Discovery** page, when viewing events, press the **follow organizer** button at the bottom right corner of an event card to follow the corresponding event's organizer.
 
-#### Subscription Feed (US15) -TO BE REWORKED
-- Subscribed organizers’ events will appear **at the top** of the Discover feed.
+#### Subscription Feed (US15)
+- Navigate to **Dashboard → My Subscriptions** to view events created by who you follow.
+- At the top of the dashbaord there are two selections: **Event Feed** and **Subscriptions**. **Event Feed** is selected by default when entering the **My Subscriptions** dashboard tab:
+  - Select **Event Feed** to view the subscribed organizers’ events.
+  - Select **Subscriptions** to view the list of organizers the user is subscribed to. In this tab, users can also remove an organizer from their list of subscriptions by pressing the corresponding **unfollow** button.
+
 
 ---
 
@@ -269,7 +273,7 @@ http://localhost:5173
 - Navigate to **Dashboard → Analytics** to view:
   - Tickets claimed
   - Attendance statistics
-  - Capacity remaining
+  - Capacity remaining per event
 
 #### Export Attendee List (US07)
 - Open an event → Click **Export Attendees (CSV)**.
@@ -277,8 +281,9 @@ http://localhost:5173
 #### QR Code Check-In (US08)
 - Select **Check-In Mode** and scan attendee QR tickets.
 
-#### View Subscribers (US14) -TO BE REWORKED
+#### View Subscribers (US14)
 - Go to **Dashboard → Subscribers** to see who is following your events.
+- Click on the **Trash Can** icon to remove a follower from your subscribers list.
 
 ---
 
