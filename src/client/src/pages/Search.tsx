@@ -146,6 +146,9 @@ export default function Search() {
 
    const filteredEvents = useMemo(() => {
       let filtered = events.filter((event) => {
+         if (event.event_date < new Date().toISOString()) {
+            return false;
+         }
          if (selectedDate) {
             const eventDateOnly = event.event_date.split("T")[0].split(" ")[0];
             if (eventDateOnly !== selectedDate) {
