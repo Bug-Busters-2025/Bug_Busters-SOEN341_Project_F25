@@ -142,7 +142,6 @@ usersRouter.get("/tickets/:userId", async (req, res) => {
             .status(500)
             .json({ error: "Database error", details: err.message });
       }
-      console.log("🎯 DB result rows:", rows);
       res.json(rows);
    });
 });
