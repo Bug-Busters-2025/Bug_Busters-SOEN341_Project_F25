@@ -42,3 +42,10 @@ Each team member contributed to different parts of the system. The following lis
 - I implemented the user saved event page and functionality
 - I made the project architecture diagram to show the different components of the system
 - I updated the project architecture diagram to show the interactions with the database
+
+### Spencer Toupin (SpenyT)
+
+- I created the routing structure for server
+- I setup the reactrouter, default layout and component routing for the project 
+- I implemented US06 Organizer Dashboard Anlytics, US13 Organizer Subscribers dashboard tab, US14 User Subscription dashboard tab, and US15 Add/Remove subscribers functionality
+- I implemented the acceptance tests for US13 and US14
