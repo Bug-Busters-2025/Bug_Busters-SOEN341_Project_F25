@@ -2,6 +2,30 @@
 
 Each team member contributed to different parts of the system. The following list summarizes individual work completed throughout the project.  
 
+## Team Members
+
+| Name               | Student Number | GitHub Username |
+| ------------------ | -------------- | --------------- |
+| Spencer Toupin     | 40259693       | SpenyT          |
+| Jeremy de Passorio | 40271747       | JeremDePass     |
+| Mattia Vergnat     | 40276164       | martin0024      |
+| Conrad Tcheuffa    | 40269674       | Conradtch07     |
+| Nigel Kyle Arintoc | 40281248       | Nigelkyle21     |
+| Muhammad Haris     | 40232227       | Harryjee7       |
+| Zein Rammal        | 40282083       | ZeinRam         |
+| Liam Handfield     | 40300383       | Doula           |
+
+---
+
+## Mattia Vergnat (martin0024)
+
+-  I implemented US01 Event Discovery, US03 Ticket Claim, US09 Approve Organizer Accounts, US12 Manage Organizations and User Roles.
+-  I wrote the acceptance tests for US01, US03, US09, and US12.
+-  I worked on fixing several bugs in the project (14 in total).
+-  I designed the UI components for the project.
+-  I did the initial layout of the db.
+-  I helped others team members setup their development environment, reviewed their pull requests, fixing issues.
+
 ### Liam Handfield (Doula)
 
 - I wrote the user story descriptions and assigned points with acceptance critera for US01–US12.
@@ -11,10 +35,11 @@ Each team member contributed to different parts of the system. The following lis
 - I implemented automated tests for US01–US09, US12, and US16.
 - I implemented US04 (Digital Ticket / QR Code View), US05 (Create Events), US07 (Organizer Dashboard), and US08 (Analytics Overview).
 - I worked on authenticating the user after signing in with clerk.
-- I created the milestones for Sprint 3 and Sprint 4.
+- I created the milestones for Sprint 1, 2, 3, 4 .
 - I wrote the Sprint 2 Meeting Minutes
 - I wrote Testing.md file
 - I edited README to include things necessary for sprint 4 such as user guide.
+- I did project Velocity, list of summary and Infrastructure in Release Summary.
 
 
 ### Jeremy de Passorio (JeremDePass & valpay-depassorio)
@@ -42,3 +67,10 @@ Each team member contributed to different parts of the system. The following lis
 - I implemented the user saved event page and functionality
 - I made the project architecture diagram to show the different components of the system
 - I updated the project architecture diagram to show the interactions with the database
+
+### Spencer Toupin (SpenyT)
+
+- I created the routing structure for server
+- I setup the reactrouter, default layout and component routing for the project 
+- I implemented US06 Organizer Dashboard Anlytics, US13 Organizer Subscribers dashboard tab, US14 User Subscription dashboard tab, and US15 Add/Remove subscribers functionality
+- I implemented the acceptance tests for US13 and US14
