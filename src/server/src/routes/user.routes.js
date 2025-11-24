@@ -142,39 +142,43 @@ usersRouter.get("/tickets/:userId", async (req, res) => {
             .status(500)
             .json({ error: "Database error", details: err.message });
       }
-      console.log("🎯 DB result rows:", rows);
       res.json(rows);
    });
 });
 
-usersRouter.get("/tickets/:ticketId/qr", (req, res) => {
+usersRouter.get("/tickets/:ticketId/qr", requireAuth(), (req, res) => {
+   const { userId } = getAuth(req);
    const ticketId = req.params.ticketId;
-
-   db.query(
-      "SELECT qr_code FROM tickets WHERE id = ?",
-      [ticketId],
-      (err, result) => {
-         if (err) {
-            console.error("DB error fetching QR:", err);
-            return res.status(500).json({ message: "Database error" });
-         }
-
-         if (result.length === 0 || !result[0].qr_code) {
-            return res.status(404).json({ message: "QR code not found" });
-         }
-
-         const qrDataUrl = result[0].qr_code;
-
-         const base64Data = qrDataUrl.split(",")[1];
-         const imgBuffer = Buffer.from(base64Data, "base64");
-
-         res.writeHead(200, {
-            "Content-Type": "image/png",
-            "Content-Length": imgBuffer.length,
-         });
-         res.end(imgBuffer);
-      }
-   );
-});
+ 
+   // Ensure ticket belongs to the currently logged-in user
+   const sql = `
+     SELECT t.qr_code 
+     FROM tickets t
+     JOIN users u ON t.user_id = u.id
+     WHERE t.id = ? AND u.clerk_id = ?
+   `;
+ 
+   db.query(sql, [ticketId, userId], (err, rows) => {
+     if (err) {
+       console.error("DB error fetching QR:", err);
+       return res.status(500).json({ message: "Database error" });
+     }
+ 
+     
+     if (rows.length === 0) {
+       return res.status(403).json({ message: "Not authorized to view this QR" });
+     }
+ 
+     const qrDataUrl = rows[0].qr_code;
+     const base64Data = qrDataUrl.split(",")[1];
+     const imgBuffer = Buffer.from(base64Data, "base64");
+ 
+     res.writeHead(200, {
+       "Content-Type": "image/png",
+       "Content-Length": imgBuffer.length,
+     });
+     res.end(imgBuffer);
+   });
+ });
 
 module.exports = usersRouter;

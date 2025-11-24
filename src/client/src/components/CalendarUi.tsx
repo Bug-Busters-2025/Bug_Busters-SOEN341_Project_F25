@@ -8,7 +8,7 @@ import {
    type ReactNode,
 } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import type { Event } from "@/data/events";
+import type { Event } from "@/types/event";
 import {
    monthsOfYear,
    isToday,
@@ -41,13 +41,13 @@ const CalendarDayCard = memo(
       return (
          <button
             onClick={() => setSelectedDate(date)}
-            className={`aspect-square p-2 rounded-lg border transition-colors relative ${
-               isToday ? "border-primary bg-primary/5" : "border-border"
-            } ${isSelected ? "bg-accent" : ""} ${
-               events.length !== 0
-                  ? "hover:bg-accent cursor-pointer"
-                  : "hover:bg-accent/50"
-            }`}
+            className={
+               `aspect-square p-2 rounded-lg border transition-colors relative 
+               ${isToday ? "border-primary bg-primary/5" : "border-border"}
+               ${isSelected ? "bg-accent" : ""}
+               ${events.length !== 0 ? "hover:bg-accent cursor-pointer" : "hover:bg-accent/50"}
+               ${!isInMonth ? "opacity-50" : ""}`
+            }
          >
             <div className="flex flex-col h-full">
                <span

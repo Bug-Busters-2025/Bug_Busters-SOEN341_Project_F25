@@ -30,6 +30,11 @@ import axios from "axios";
 import { useUserId } from "@/hooks/useUserId";
 import { Button } from "@/components/ui/button";
 import { useRole } from "@/hooks/useRole";
+import {
+   getFollowing,
+   followOrganizer,
+   unfollowOrganizer,
+} from "@/utils/asyncStudentSubscription";
 
 export default function Search() {
    const { userId, loading: userLoading } = useUserId();
@@ -45,6 +50,11 @@ export default function Search() {
    const [registeredEvents, setRegisteredEvents] = useState<
       EventWithOrganizer[]
    >([]);
+   const [followingOrganizerIds, setFollowingOrganizerIds] = useState<
+      Set<number>
+   >(() => new Set());
+   const [isLoadingFollowing, setIsLoadingFollowing] = useState<boolean>(false);
+   const [followError, setFollowError] = useState<string | null>(null);
 
    useEffect(() => {
       const fetchData = async () => {
@@ -70,8 +80,75 @@ export default function Search() {
       fetchData();
    }, [userId]);
 
+   useEffect(() => {
+      const fetchFollowing = async () => {
+         if (!userId || role !== "student") return;
+         try {
+            setIsLoadingFollowing(true);
+            setFollowError(null);
+            const res = await getFollowing();
+            setFollowingOrganizerIds(
+               new Set(res.organizers.map((o) => o.organizer_id))
+            );
+         } catch (error) {
+            console.error("Error fetching followed organizers:", error);
+            setFollowError("Failed to load followed organizers");
+         } finally {
+            setIsLoadingFollowing(false);
+         }
+      };
+
+      void fetchFollowing();
+   }, [userId, role]);
+
+   const isFollowingOrganizer = (organizerId?: number) =>
+      typeof organizerId === "number" && followingOrganizerIds.has(organizerId);
+
+   const handleFollowOrganizer = async (organizerId?: number) => {
+      if (!userId || typeof organizerId !== "number") {
+         alert("You need to be signed in as a student to follow organizers");
+         return;
+      }
+
+      try {
+         setFollowError(null);
+         await followOrganizer(organizerId);
+         setFollowingOrganizerIds((prev) => {
+            const next = new Set(prev);
+            next.add(organizerId);
+            return next;
+         });
+      } catch (error) {
+         console.error("Error following organizer:", error);
+         setFollowError("Failed to follow organizer");
+      }
+   };
+
+   const handleUnfollowOrganizer = async (organizerId?: number) => {
+      if (!userId || typeof organizerId !== "number") {
+         alert("You need to be signed in as a student to unfollow organizers");
+         return;
+      }
+
+      try {
+         setFollowError(null);
+         await unfollowOrganizer(organizerId);
+         setFollowingOrganizerIds((prev) => {
+            const next = new Set(prev);
+            next.delete(organizerId);
+            return next;
+         });
+      } catch (error) {
+         console.error("Error unfollowing organizer:", error);
+         setFollowError("Failed to unfollow organizer");
+      }
+   };
+
    const filteredEvents = useMemo(() => {
       let filtered = events.filter((event) => {
+         if (event.event_date < new Date().toISOString()) {
+            return false;
+         }
          if (selectedDate) {
             const eventDateOnly = event.event_date.split("T")[0].split(" ")[0];
             if (eventDateOnly !== selectedDate) {
@@ -418,7 +495,7 @@ export default function Search() {
                      return (
                         <Card
                            key={event.id}
-                           className="group hover:shadow-xl transition-all duration-300 cursor-pointer border-border/50 hover:border-border bg-card/50 backdrop-blur-sm overflow-hidden animate-in fade-in-0 slide-in-from-bottom-4"
+                           className="group hover:shadow-xl transition-all duration-300 border-border/50 hover:border-border bg-card/50 backdrop-blur-sm overflow-hidden animate-in fade-in-0 slide-in-from-bottom-4"
                            style={{ animationDelay: `${index * 50}ms` }}
                         >
                            <div className="relative h-48 overflow-hidden">
@@ -496,12 +573,51 @@ export default function Search() {
                               </div>
 
                               <div className="mb-4 pt-2 border-t border-border/50">
-                                 <p className="text-sm font-medium text-foreground">
-                                    Organized by:{" "}
-                                    <span className="text-primary">
-                                       {event.organizer_name}
-                                    </span>
-                                 </p>
+                                 <div className="flex items-center justify-between gap-2 flex-wrap">
+                                    <p className="text-sm font-medium text-foreground">
+                                       Organized by:{" "}
+                                       <span className="text-primary">
+                                          {event.organizer_name}
+                                       </span>
+                                    </p>
+                                    {role === "student" &&
+                                       event.organizer_id && (
+                                          <Button
+                                             size="sm"
+                                             onClick={(e) => {
+                                                e.stopPropagation();
+                                                if (
+                                                   isFollowingOrganizer(
+                                                      event.organizer_id
+                                                   )
+                                                ) {
+                                                   void handleUnfollowOrganizer(
+                                                      event.organizer_id
+                                                   );
+                                                } else {
+                                                   void handleFollowOrganizer(
+                                                      event.organizer_id
+                                                   );
+                                                }
+                                             }}
+                                             disabled={isLoadingFollowing}
+                                             className="text-xs cursor-pointer"
+                                             variant={
+                                                isFollowingOrganizer(
+                                                   event.organizer_id
+                                                )
+                                                   ? "secondary"
+                                                   : "dashed"
+                                             }
+                                          >
+                                             {isFollowingOrganizer(
+                                                event.organizer_id
+                                             )
+                                                ? "Unfollow organizer"
+                                                : "Follow organizer"}
+                                          </Button>
+                                       )}
+                                 </div>
                               </div>
 
                               {role === "student" && (

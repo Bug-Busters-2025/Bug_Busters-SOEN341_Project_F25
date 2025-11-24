@@ -10,32 +10,39 @@ Inspired by platforms like [CampusGroups](https://www.campusgroups.com), the sys
 
 ## Primary User Roles & Core Features
 
-### 1. Student Experience
+### 1. Student Experience (US01–US04)
 
-**Event Discovery**:Browse and search events with filters (by date, category, or organization)
-**Event Management**
+- **Event Discovery**: Browse and search events with filters (date, category, organization). (US01)
+- **Save Events**: Save events to a personal calendar/favorites list. (US02)
+- **Ticket Registration**: Claim tickets for events. (US03)
+- **Digital Tickets**: Receive a unique QR code for event check-in. (US04)
 
--  Save events to a personal calendar
--  Claim free or mock paid tickets
--  Receive digital tickets with unique QR codes for check-in
+---
 
-### 2. Organizer Tools
+### 2. Organizer Tools (US05–US08)
 
--  **Event Creation**: Add event details (title, description, date, time, location, ticket capacity, and type)
--  **Analytics Dashboard**: View key stats (tickets issued, attendance rate, remaining capacity)
--  **Utilities**:
-   -  Export attendee lists (CSV format)
-   -  Use integrated QR code scanner for ticket validation
+- **Event Creation**: Create and publish events (title, description, date, capacity, etc.). (US05)
+- **Analytics Dashboard**: View statistics such as ticket count, attendance, and capacity. (US06)
+- **Utilities**:
+  - Export attendee lists (CSV format) (US07)
+  - Validate tickets using an integrated QR code scanner (US08)
 
-### 3. Administrator Capabilities
+---
 
--  **Platform Oversight**: Approve or deny organizer accounts, Moderate event listings to ensure policy compliance
--  **Global Analytics**: View campus-wide metrics (total events, tickets issued, participation trends)
+### 3. Administrator Capabilities (US09–US12)
 
-### 4. Ideas for Fourth Core Feature
+- **Approve Organizer Accounts** to grant event posting permissions. (US09)
+- **Moderate Events** to ensure posted events meet platform guidelines. (US10)
+- **View Platform-wide Analytics** such as total events, attendance and engagement trends. (US11)
+- **Manage Organizations and User Roles** (promote/demote users to organizer or admin roles). (US12)
 
--  **Map**: Show location of events on a map
--  **Subscriptions**: student users could subscribe to organizers and stay up to date with new events.
+---
+
+### 4. Subscription Feature (US13–US15) 
+
+- **Subscriptions**: Students can subscribe to organizers. (US13)
+- **Organizer Subscriber List**: Organizers see who follows them. (US14)
+- **Student Dashboard Feed**: Students see events from followed organizers first. (US15)
 
 ---
 
@@ -68,7 +75,98 @@ Inspired by platforms like [CampusGroups](https://www.campusgroups.com), the sys
 -  Backend: express.js
 -  Database: MySql
 -  Authentication: username & password (Clerk)
--  Deployment: TBD (Vercel / Cloudflare / AWS)
 -  Version Control: Git + GitHub
 
-tests
+## Coding Style & Naming Conventions
+
+To maintain consistency across the project, we follow these naming conventions:
+
+- React Components: `PascalCase`  
+
+- Hooks: `camelCase` and always start with `use`  
+
+- General Variables and Functions: `camelCase`
+
+- Folders: `kebab-case`  
+
+- Database Tables & Columns: `snake_case`  
+
+- Constants: `UPPER_CASE`
+
+## Installation & Setup -NEEDED
+
+## User Guide
+
+### Student Guide (US01–US04, US13, US15)
+
+#### Discover Events (US01)
+- Go to **Discover** page and browse events.
+- Use search and filters to refine results.
+
+#### Save Events (US02)
+- Click **Save** on an event card.
+- View saved items under **Saved Events**.
+
+#### Register for Tickets (US03)
+- Open an event page and click **Register**.
+- If full, you may be placed on a **waitlist**.
+
+#### Digital Tickets (US04)
+- Access **My Tickets** to view QR-coded tickets for check-in.
+
+#### Subscribe to Organizers (US13) -TO BE REWORKED
+- On an organizer/event page, click **Subscribe**.
+
+#### Subscription Feed (US15) -TO BE REWORKED
+- Subscribed organizers’ events will appear **at the top** of the Discover feed.
+
+---
+
+### Organizer Guide (US05–US08, US14)
+
+#### Create Events (US05)
+- Go to **Organizer Dashboard → Create Event**.
+- Fill out required event details and publish.
+
+#### View Analytics (US06)
+- Navigate to **Dashboard → Analytics** to view:
+  - Tickets claimed
+  - Attendance statistics
+  - Capacity remaining
+
+#### Export Attendee List (US07)
+- Open an event → Click **Export Attendees (CSV)**.
+
+#### QR Code Check-In (US08)
+- Select **Check-In Mode** and scan attendee QR tickets.
+
+#### View Subscribers (US14) -TO BE REWORKED
+- Go to **Dashboard → Subscribers** to see who is following your events.
+
+---
+
+### Administrator Guide (US09–US12)
+
+#### Approve Organizer Requests (US09)
+- Go to **Admin Panel → Organizer Requests**.
+- Approve or reject organizer status applications.
+
+#### Moderate Events (US10)
+- Review newly created events and approve visibility.
+
+#### Platform-Wide Analytics (US11)
+- Access **Admin Analytics** to view system-wide engagement data.
+
+#### Manage Roles & Organizations (US12)
+- Use **Admin User Management** to promote/demote users.
+
+## Testing Documentation
+See the full testing report here:  
+[TESTING.md](Documentation/Testing/TESTING.md)
+
+## Contribution Documentation
+See the full individual contribution here: 
+[CONTRIBUTIONS.md](Documentation/Contributions/PROJECTCONTRIBUTIONS.md)
+
+---
+

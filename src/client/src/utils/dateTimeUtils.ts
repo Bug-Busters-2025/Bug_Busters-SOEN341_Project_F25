@@ -8,6 +8,16 @@ const formatDate = (dateString: string) => {
    });
 };
 
+const getFormattedTime = (dateString: string) => {
+   const dateObj = new Date(dateString);
+   return isNaN(dateObj.getTime())
+      ? ""
+      : dateObj.toLocaleTimeString(undefined, {
+         hour: "2-digit",
+         minute: "2-digit",
+      });
+};
+
 const getDayOfWeek = (dateString: string) => {
    const date = new Date(dateString);
    return date.toLocaleDateString("en-US", { weekday: "short" });
@@ -77,8 +87,23 @@ const monthsOfYear: string[] = [
    "December",
 ];
 
+function getMonthYear(d: Date) {
+   return { month: d.getMonth(), year: d.getFullYear() };
+}
+   
+function getLastMonthRef(now: Date): { month: number; year: number } {
+   const prev = new Date(now);
+   prev.setMonth(now.getMonth() - 1);
+   return getMonthYear(prev);
+}
+
+function isSameMonthYear(d: Date, month: number, year: number): boolean {
+   return d.getMonth() === month && d.getFullYear() === year;
+}
+
 export {
    formatDate,
+   getFormattedTime,
    getDayOfWeek,
    getFirstDayOfMonth,
    isSameDay,
@@ -88,4 +113,7 @@ export {
    weekDays,
    weekDaysAbreviated,
    monthsOfYear,
+   getMonthYear,
+   getLastMonthRef,
+   isSameMonthYear
 };

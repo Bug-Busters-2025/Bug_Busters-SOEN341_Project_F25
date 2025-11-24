@@ -1,4 +1,4 @@
-import { createBrowserRouter } from "react-router";
+import { createBrowserRouter, Navigate } from "react-router";
 import { SignIn, SignUp } from "@clerk/clerk-react";
 import { dark } from "@clerk/themes";
 import AuthCentered from "@/components/AuthCentered";
@@ -10,6 +10,7 @@ import Calendar from "@/pages/Calendar";
 import ErrorBoundary from "@/pages/ErrorBoundary";
 import DashboardLayout from "@/pages/dashboard/DashboardLayout";
 import DashboardRedirect from "@/pages/dashboard/DashboardRedirect";
+import AdminAnalytics from "@/pages/dashboard/sections/AdminAnalytics";
 import OrganizerAnalytics from "@/pages/dashboard/sections/OrganizerAnalytics";
 import OrganizerEvents from "@/pages/dashboard/sections/OrganizerEvents";
 import OrganizerNotifications from "@/pages/dashboard/sections/OrganizerNotifications";
@@ -17,8 +18,11 @@ import AdminManageUsers from "@/pages/dashboard/sections/AdminManageUsers";
 import AdminManageEvents from "@/pages/dashboard/sections/AdminManageEvents";
 import ProtectedRoute from "@/components/protectedRoutes";
 import MyTickets from "@/components/dashboard/users/MyTickets";
-import Home from "@/pages/Home";
 import ScanTicketPage from "@/pages/dashboard/sections/ScanTicketPage";
+import MySubscriptions from "@/pages/dashboard/sections/MySubscriptions";
+import MySubscriptionFeed from "@/components/dashboard/users/MySubscriptionFeed";
+import MySubscriptionsFollowing from "@/components/dashboard/users/MySubscriptionsFollowing";
+import MySubscribers from "@/pages/dashboard/sections/MySubscribers"
 
 const authAppearance = {
    baseTheme: dark,
@@ -39,7 +43,7 @@ const router = createBrowserRouter([
       Component: RootLayout,
       errorElement: <ErrorBoundary />,
       children: [
-         { id: "home", index: true, Component: Home },
+         { id: "home", index: true, element: <Navigate to="/search" replace /> },
          {
             id: "dashboard",
             path: "dashboard",
@@ -86,10 +90,19 @@ const router = createBrowserRouter([
                   ),
                },
                {
+                  id: "admin-analytics",
+                  path: "admin-analytics",
+                  element: (
+                     <ProtectedRoute allowedRoles={["admin"]}>
+                        <AdminAnalytics />
+                     </ProtectedRoute>
+                  ),
+               },
+               {
                   id: "organizer-events",
                   path: "organizer-events",
                   element: (
-                     <ProtectedRoute allowedRoles={["organizer", "admin"]}>
+                     <ProtectedRoute allowedRoles={["organizer"]}>
                         <OrganizerEvents />
                      </ProtectedRoute>
                   ),
@@ -98,7 +111,7 @@ const router = createBrowserRouter([
                   id: "analytics",
                   path: "analytics",
                   element: (
-                     <ProtectedRoute allowedRoles={["organizer", "admin"]}>
+                     <ProtectedRoute allowedRoles={["organizer"]}>
                         <OrganizerAnalytics />
                      </ProtectedRoute>
                   ),
@@ -111,6 +124,29 @@ const router = createBrowserRouter([
                         <OrganizerNotifications />
                      </ProtectedRoute>
                   ),
+               },
+               {
+                  id: "my-subscribers",
+                  path: "subscribers",
+                  element: (
+                     <ProtectedRoute allowedRoles={["organizer"]}>
+                        <MySubscribers />
+                     </ProtectedRoute>
+                  ),
+               },
+               {
+                  id: "subscriptions",
+                  path: "subscriptions",
+                  element: (
+                     <ProtectedRoute allowedRoles={["student", "organizer"]}>
+                        <MySubscriptions />
+                     </ProtectedRoute>
+                  ),
+                  children: [
+                    { index: true, element: <Navigate to="feed" replace /> },
+                    { id: "subs-event-feed", path: "feed", Component: MySubscriptionFeed },
+                    { id: "subs-subscriptions", path: "following", Component: MySubscriptionsFollowing }
+                  ]
                },
             ],
          },
