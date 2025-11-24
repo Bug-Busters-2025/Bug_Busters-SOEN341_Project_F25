@@ -17,11 +17,11 @@ Each user story was tested against its acceptance criteria.
 | US08 | QR Ticket Validation (Check-in) | Verified | Automated Test (`US08.test.js`) + Acceptance Test |
 | US09 | Approve Organizer Accounts | Verified | Automated Test (`US09.test.js`) + Acceptance Test |
 | US10 | Event Moderation | Verified | Automated Test (`US10.test.js`) + Acceptance Test |
-| US11 | Admin Analytics | Partially Verified | Automated Test (`US11.test.js`) + Acceptance Test |
+| US11 | Admin Analytics | Verified | Automated Test (`US11.test.js`) + Acceptance Test |
 | US12 | Manage Roles / Organizations | Verified | Automated Test (`US12.test.js`) + Acceptance Test |
 | US13 | Student Subscribe to Organizer | Verified | Automated Test (`US13.test.js`) + Acceptance Test |
 | US14 | Organizer View Subscribers | Verified | Automated Test (`US14.test.js`) + Acceptance Test |
-| US15 | Subscribe / Unsubscribe Button Behaviour | Verified | Acceptance Test  |
+| US15 | Subscribe / Unsubscribe Button Behaviour | Verified | Automated Test (`US14.test.js`) + Acceptance Test  |
 
 ---
 
