@@ -2,6 +2,15 @@
 
 Each team member contributed to different parts of the system. The following list summarizes individual work completed throughout the project.  
 
+## Mattia Vergnat (martin0024)
+
+-  I implemented US01 Event Discovery, US03 Ticket Claim, US09 Approve Organizer Accounts, US12 Manage Organizations and User Roles.
+-  I wrote the acceptance tests for US01, US03, US09, and US12.
+-  I worked on fixing several bugs in the project (14 in total).
+-  I designed the UI components for the project.
+-  I did the initial layout of the db.
+-  I helped others team members setup their development environment, reviewed their pull requests, fixing issues.
+
 ### Liam Handfield (Doula)
 
 - I wrote the user story descriptions and assigned points with acceptance critera for US01–US12.
