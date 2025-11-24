@@ -49,6 +49,7 @@ Tests: 57 passed, 57 total
 | Event creation test returned `404` | Clerk authentication blocked organizer identity in test runs | Added Jest mock for `@clerk/express` to bypass authentication during testing |
 | CSV Export returned `403` unexpectedly | Endpoint requires organizer permissions | Updated test expectations to allow `200`, `403`, or `404` depending on user context |
 | Ticket check-in requests failed due to inconsistent QR payload formats | Backend and frontend used different encodings | Standardized the QR payload structure system-wide |
+|Admin deleting events made an error|'archived' was sent to the database instead of 'DELETED'|Changed 'archived' to 'DELETED'|
 
 
 
