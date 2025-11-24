@@ -4,7 +4,7 @@ import { cn } from "@/lib/utils";
 
 interface AnalyticsCardProps {
    title: string;
-   icon: ReactNode;
+   icon?: ReactNode;
    analytic: number;
    action?: (id: string) => void;
    children: ReactNode;
@@ -17,7 +17,16 @@ function AnalyticsCard({
    analytic,
    action,
    children,
+   trend = "neutral"
 }: AnalyticsCardProps) {
+   const trendColor = trend === "up"
+      ? "text-emerald-500"
+      : trend === "down"
+      ? "text-red-500"
+      : "text-muted-foreground";
+
+   const trendSymbol = trend === "up" ? "▲" : trend === "down" ? "▼" : "◼";
+
    return (
       <Card
          className={cn(
@@ -29,11 +38,17 @@ function AnalyticsCard({
             <h3 className="text-sm font-medium text-muted-foreground">
                {title}
             </h3>
-            <div className="p-2 bg-primary/10 rounded-lg">{icon}</div>
+            {icon && (<div className="p-2 bg-primary/10 rounded-lg">{icon}</div>)}
          </CardHeader>
          <CardContent>
             <div className="text-3xl font-bold tracking-tight">{analytic}</div>
-            <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1">
+            <p
+               className={cn(
+                  "text-xs mt-1 flex items-center gap-1",
+                  trendColor
+               )}
+            >
+               <span>{trendSymbol}</span>
                {children}
             </p>
          </CardContent>

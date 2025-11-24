@@ -2,7 +2,7 @@ import { memo } from "react";
 import { Users, MapPin } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { getDayOfWeek } from "@/utils/dateTimeUtils";
-import { type Event } from "@/data/events";
+import { type Event } from "@/types/event";
 
 interface EventOverviewProp {
    event: Event;

@@ -39,7 +39,7 @@ export default function AdminManageEvents() {
         headers: token ? { Authorization: `Bearer ${token}` } : {},
       });
       const published = (res.data as EventRow[]).filter(
-        (e) => (e.status ?? "published").toLowerCase() !== "archived"
+        (e) => (e.status ?? "PUBLISHED").toUpperCase() !== "DELETED"
       );
       setEvents(published);
     } catch (e: any) {
@@ -66,7 +66,7 @@ export default function AdminManageEvents() {
       const token = await getToken();
       await axios.patch(
         `http://localhost:3000/api/v1/events/${eventId}/status`,
-        { status: "archived" },
+        { status: "DELETED" },
         { headers: token ? { Authorization: `Bearer ${token}` } : {} }
       );
       toast.success("Event removed", {

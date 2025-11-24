@@ -52,7 +52,6 @@ export interface FeedResponse {
     events: Event[];
 }
 
-
 // Outlet context type
 export interface SubscriptionContextType {
     events: Event[];

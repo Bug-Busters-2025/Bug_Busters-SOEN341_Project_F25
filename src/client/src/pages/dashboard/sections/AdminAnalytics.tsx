@@ -10,7 +10,7 @@ import AnalyticsCard from "@/components/dashboard/organizer/AnalyticsCard";
 import AnalyticsSection from "@/components/dashboard/organizer/AnalyticsSection";
 import EventOverviewCard from "@/components/ui/EventOverviewCard";
 import CalendarUi from "@/components/CalendarUi";
-import { type Event } from "@/data/events";
+import { type Event } from "@/types/event";
 import axios from "axios";
 import { useAuth } from "@clerk/clerk-react";
 import {
