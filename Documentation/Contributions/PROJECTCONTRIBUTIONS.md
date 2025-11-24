@@ -11,10 +11,11 @@ Each team member contributed to different parts of the system. The following lis
 - I implemented automated tests for US01–US09, US12, and US16.
 - I implemented US04 (Digital Ticket / QR Code View), US05 (Create Events), US07 (Organizer Dashboard), and US08 (Analytics Overview).
 - I worked on authenticating the user after signing in with clerk.
-- I created the milestones for Sprint 3 and Sprint 4.
+- I created the milestones for Sprint 1, 2, 3, 4 .
 - I wrote the Sprint 2 Meeting Minutes
 - I wrote Testing.md file
 - I edited README to include things necessary for sprint 4 such as user guide.
+- I did project Velocity, list of summary and Infrastructure in Release Summary.
 
 
 ### Jeremy de Passorio (JeremDePass & valpay-depassorio)
