@@ -2,6 +2,21 @@
 
 Each team member contributed to different parts of the system. The following list summarizes individual work completed throughout the project.  
 
+## Team Members
+
+| Name               | Student Number | GitHub Username |
+| ------------------ | -------------- | --------------- |
+| Spencer Toupin     | 40259693       | SpenyT          |
+| Jeremy de Passorio | 40271747       | JeremDePass     |
+| Mattia Vergnat     | 40276164       | martin0024      |
+| Conrad Tcheuffa    | 40269674       | Conradtch07     |
+| Nigel Kyle Arintoc | 40281248       | Nigelkyle21     |
+| Muhammad Haris     | 40232227       | Harryjee7       |
+| Zein Rammal        | 40282083       | ZeinRam         |
+| Liam Handfield     | 40300383       | Doula           |
+
+---
+
 ## Mattia Vergnat (martin0024)
 
 -  I implemented US01 Event Discovery, US03 Ticket Claim, US09 Approve Organizer Accounts, US12 Manage Organizations and User Roles.
