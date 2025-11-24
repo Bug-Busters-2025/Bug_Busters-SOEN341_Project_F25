@@ -7,8 +7,6 @@ describe("US09 - Approve Organizer Accounts", () => {
     const res = await request(app)
       .patch("/api/v1/users/1/role")
       .send({ role: "organizer" });
-
-      console.log("US08 returned status:", res.statusCode);
     expect([200, 400, 401, 403, 404, 500]).toContain(res.statusCode);
   });
 
